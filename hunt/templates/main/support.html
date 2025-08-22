@@ -1,0 +1,45 @@
+{% extends 'base_with_nav.html' %} {% load static %} {% block main %}
+<a href="{% url 'main:index' %}"
+  ><button class="btn btn-secondary float-left m-md-2">Back</button>
+</a>
+<div class="col-md-6 col-12 m-auto mt-md-3 p-md-5">
+  <h1>Looks like you need some help!</h1>
+  <div class="text-left">
+    <h3>How does this work?</h3>
+    <p>
+      This year's scavenger hunt features a CTF-style challenge setup, where
+      there are a multitude of different problems that students will take online
+      and in person to find and solve. Once you solve a problem correctly, it
+      will solve it for your entire class, so make sure somebody in your class
+      hasn't already solved a problem that you want to work on. Besides that,
+      read problems, collect codes, and grab points!
+    </p>
+  </div>
+  <div class="text-left">
+    <h3>How do I submit a challenge?</h3>
+    <p>
+      Each challenge will result in a flag, or a code, you can submit these on
+      the "Challenges" tab under the top right dropdown.
+    </p>
+  </div>
+  <div class="text-left">
+    <h3>How do I know if I've got it right? Is the website just wrong?</h3>
+    <p>
+      There is a single flag for every problem, and the formatting will be
+      consistent for every problem. If you have a strong inclination that you
+      have the correct answer and our website is incorrect, feel free to reach
+      out to our organizers.
+    </p>
+  </div>
+  <div class="text-left">
+    <h3>Who's organizing this thing?</h3>
+    <p>
+      This year's Scavenger Hunt is hosted by the TJ SGA and organized by Brian Zhou (2024), Matt Sprintston (2024), Ojas Chaudhary (2024), and Justin Lee (2025). Many thanks to contributors Alexander Nassif (2024), Soham Jain (2025), etc. Feel free to reach out to our organizers, SGA, or your
+      class officers if you have any further questions! Good luck!
+
+      Scavenger Hunt in 2022 was organized by Rushil
+      Umaretiya (2023), Vinay Ayala (2023), Aakash Vittala (2023), Sahishnu Hanumansetty (2023), Allison Zhong (2024), and Brian Zhou (2024).
+    </p>
+  </div>
+</div>
+{% endblock %}

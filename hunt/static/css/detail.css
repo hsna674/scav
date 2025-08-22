@@ -1,0 +1,11 @@
+.available {
+    background-color: lightgray;
+}
+
+.completed {
+    background-color: lightgreen;
+}
+
+.locked {
+    background-color: lightsalmon;
+}

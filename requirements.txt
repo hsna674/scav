@@ -1,0 +1,6 @@
+django==4.2.5
+social-auth-app-django==5.3.0
+django-ckeditor==6.7.0
+whitenoise==6.5.0
+gunicorn==21.2.0
+flask==2.3.3

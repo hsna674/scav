@@ -1,0 +1,31 @@
+{% load static %}
+<!doctype html>
+<html>
+    <head>
+        <meta charset='utf-8'>
+        <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+        <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+        <script src='https://kit.fontawesome.com/74f5f903f7.js' crossorigin='anonymous'></script>
+        <script
+            src="https://code.jquery.com/jquery-3.4.1.min.js"
+            integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+            crossorigin="anonymous">
+        </script>
+        <script>
+            console.log("shoo!")
+            console.log("https://pastebin.com/qE77RXd2")
+        </script>
+        <link rel='stylesheet' href='https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css' integrity='sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T' crossorigin='anonymous'>
+        <title>Hoco Hunt 2025</title>
+        <link rel='icon' href="{% static 'img/favicon.png' %}" type='image/png'>
+
+        <link rel='stylesheet' href="{% static 'css/base.css' %}">
+        {% block head %}{% endblock %}
+    </head>
+    <body>
+        {% block root %}
+            {% block main %}
+            {% endblock %}
+        {% endblock %}
+    </body>
+</html>
