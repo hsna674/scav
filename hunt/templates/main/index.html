@@ -4,9 +4,16 @@
 
 {% block head %}
 <link rel='stylesheet' href="{% static 'css/index.css' %}">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <audio id="lose" src="{% static 'img/losing.mp3' %}"></audio>
 <script>
     function checkFlag(challenge_id) {
+        const input = $("#" + challenge_id);
+        const submitBtn = input.siblings('.submit-btn');
+        
+        // Disable button during request
+        submitBtn.prop('disabled', true).text('Submitting...');
+        
         $.ajax({
             type: 'POST',
             url: "{% url 'main:validate_flag' %}",
@@ -14,34 +21,49 @@
                 csrfmiddlewaretoken: '{{ csrf_token }}',
                 dataType: 'json',
                 challenge_id: challenge_id,
-                flag: $("#" + challenge_id).val(),
+                flag: input.val(),
             },
             success: function (data) {
                 if (data.result == "success") {
                     $("#box" + challenge_id).removeClass("available").addClass("completed");
+                    // Update content to show "Solved!" regardless of whether it's exclusive
+                    $("#box" + challenge_id + " .challenge-content").html('<div class="challenge-status-text completed">Solved!</div>');
+                    // Remove the input section
+                    $("#box" + challenge_id + " .challenge-input").remove();
                 } else if (data.result === "ratelimited") {
-                    const alert = $("<div class='alert alert-danger alert-dismissible fade show' role='alert'>Why don't we slow down a bit :~)</div>");
-                    $(`#${challenge_id}`).parent().append(alert);
+                    const alert = $("<div class='alert alert-danger alert-dismissible fade show' role='alert' style='margin-top: 10px; border-radius: 8px;'>Why don't we slow down a bit :~)</div>");
+                    input.parent().append(alert);
                     setTimeout(function () {
                         alert.alert('close');
-                    }, 2000);
+                    }, 3000);
+                    submitBtn.prop('disabled', false).text('Submit');
                 } else {
                     document.getElementById("lose").play();
-                    $("#" + challenge_id).css("background-color", "red");
+                    input.addClass("error");
+                    setTimeout(() => input.removeClass("error"), 500);
+                    submitBtn.prop('disabled', false).text('Submit');
                 }
             },
             failure: function () {
-                $("#" + challenge_id).css("background-color", "red");
+                input.addClass("error");
+                setTimeout(() => input.removeClass("error"), 500);
+                submitBtn.prop('disabled', false).text('Submit');
             }
         });
     }
-</script>
-<link rel='stylesheet' href="{% static 'css/overview.css' %}">
-<script>
-    $(document).ready(function () {
+    
+    // Set dark mode class on body
+    $(document).ready(function() {
+        {% if dark_mode %}
+        document.body.classList.add('dark-mode');
+        {% endif %}
+        
         giveRibbons();
         $("#hoco-scores").fadeIn();
     });
+</script>
+<link rel='stylesheet' href="{% static 'css/overview.css' %}">
+<script>
     function giveRibbons() {
         var arr = [];
         $("#hoco-scores .score-box").each(function () {
@@ -68,125 +90,99 @@
         });
     }
 </script>
-
-
-{% if dark_mode %}
-<style>
-    body {
-        background: #1B2430
-    }
-
-    .header {
-        background-color: #816797
-    }
-
-    .completed {
-        background: darkgreen
-    }
-
-    .locked {
-        background: #444444
-    }
-
-    .available {
-        background: darkgray
-    }
-
-    h1 {
-        color: lightgray
-    }
-</style>
-{% endif %}
 {% endblock %}
 
 {% block main %}
+<div class="challenge-container">
+    <!-- Leaderboard -->
+    <div id="hoco-scores">
+        <div class="score-box">
+            <div class="class">{{ data.0.0 }}</div>
+            <div class="corner-ribbon"></div>
+            <div class="score" id="score-senior">{{ data.0.1 }}</div>
+            points
+        </div>
+        <div class="score-box">
+            <div class="class">{{ data.1.0 }}</div>
+            <div class="corner-ribbon"></div>
+            <div class="score" id="score-junior">{{ data.1.1 }}</div>
+            points
+        </div>
+        <div class="score-box">
+            <div class="class">{{ data.2.0 }}</div>
+            <div class="corner-ribbon"></div>
+            <div class="score" id="score-sophomore">{{ data.2.1 }}</div>
+            points
+        </div>
+        <div class="score-box">
+            <div class="class">{{ data.3.0 }}</div>
+            <div class="corner-ribbon"></div>
+            <div class="score" id="score-freshman">{{ data.3.1 }}</div>
+            points
+        </div>
+    </div>
 
-<div id="hoco-scores">
-    <div class="score-box">
-        <div class="class">{{ data.0.0 }}</div>
-        <div class="corner-ribbon"></div>
-        <div class="score" id="score-senior">{{ data.0.1 }}</div>
-        points
-    </div>
-    <div class="score-box">
-        <div class="class">{{ data.1.0 }}</div>
-        <div class="corner-ribbon"></div>
-        <div class="score" id="score-junior">{{ data.1.1 }}</div>
-        points
-    </div>
-    <div class="score-box">
-        <div class="class">{{ data.2.0 }}</div>
-        <div class="corner-ribbon"></div>
-        <div class="score" id="score-sophomore">{{ data.2.1 }}</div>
-        points
-    </div>
-    <div class="score-box">
-        <div class="class">{{ data.3.0 }}</div>
-        <div class="corner-ribbon"></div>
-        <div class="score" id="score-freshman">{{ data.3.1 }}</div>
-        points
-    </div>
-</div>
-<h1 class="border-bottom">Homecoming Scavenger Hunt 2025</h1>
-<br>
-<br>
-<br>
-{% for category, challenges in categories.values %}
-<div class="col">
-    <div class="row">
-        <h1 class="ml-3">{{ category.name }}</h1>
-        <p style="cursor: pointer;"
-            onclick="document.getElementById('c-{{ category.id }}').style.display = document.getElementById('c-{{ category.id }}').style.display === 'none' ? 'flex' : 'none'"
-            class="ml-auto mr-3 btn btn-primary">toggle</p>
-    </div>
-    <div class="row">
-        <p class="ml-2 font-italic">{{category.description}}</p>
-    </div>
-    <div id="c-{{ category.id }}" class='row'>
-        {% for challenge, status in challenges.items %}
-        {% if status.0.unblocked %}
-        <a class='col-lg-3 col-md-4 col-sm-6 col-xs-12'>
-            <div id="box{{ status.0.id }}"
-                class="box {% if status.1 == 'available' %}available{% elif status.1 == 'completed' %}completed{% else %}locked{% endif %} p-3">
-                <div class="centered-div">
-                    <h4>{{ status.0.name }}</h4>
-                    <p>Points: {{ status.0.points }}</p>
+    <!-- Page Title -->
+    <h1 class="page-title">Homecoming Scavenger Hunt 2025</h1>
+
+    <!-- Categories and Challenges -->
+    {% for category, challenges in categories.values %}
+    <div class="category-section">
+        <div class="category-header">
+            <h2 class="category-title">{{ category.name }}</h2>
+            <button class="toggle-btn" 
+                onclick="document.getElementById('c-{{ category.id }}').style.display = document.getElementById('c-{{ category.id }}').style.display === 'none' ? 'grid' : 'none'">
+                Toggle
+            </button>
+        </div>
+        
+        {% if category.description %}
+        <p class="category-description">{{ category.description }}</p>
+        {% endif %}
+        
+        <div id="c-{{ category.id }}" class="challenges-grid">
+            {% for challenge, status in challenges.items %}
+            {% if status.0.unblocked %}
+            <div id="box{{ status.0.id }}" class="challenge-box {% if status.1 == 'available' %}available{% elif status.1 == 'completed' %}completed{% else %}locked{% endif %}">
+                <div class="challenge-header">
+                    <h4 class="challenge-title">{{ status.0.name }}</h4>
+                    <p class="challenge-points">{{ status.0.points }} points</p>
                 </div>
-                <div class="{% if status.1 == 'completed' %}center{% else %}left{% endif %}-div">
-                    {% if status.0.exclusive %}
-                    <p>This challenge's points are only available to the first class to complete it.</p>
-                    <p>{{ status.0.short_description }}</p>
+                
+                <div class="challenge-content">
+                    {% if status.1 == 'completed' %}
+                        <div class="challenge-status-text completed">Solved!</div>
                     {% elif status.1 == 'locked' %}
-                    <p>This challenge was exclusive and has already been completed by another class.</p>
-                    {% elif status.1 == 'completed' %}
-                    <h3>Solved!</h3>
+                        <p class="challenge-description">This challenge was exclusive and has already been completed by another class.</p>
+                    {% elif status.0.exclusive %}
+                        <p class="challenge-description">This challenge's points are only available to the first class to complete it.</p>
+                        <p class="challenge-description">{{ status.0.short_description }}</p>
                     {% else %}
-                    <p>{{ status.0.short_description }}</p>
+                        <p class="challenge-description">{{ status.0.short_description }}</p>
                     {% endif %}
                 </div>
+                
                 {% if status.1 == 'available' %}
-                <hr>
-                <input type="text" id="{{ status.0.id }}" placeholder="Enter the flag here" />
-                <input type="submit" value="Submit" onclick="checkFlag({{ status.0.id }})" />
+                <div class="challenge-input">
+                    <input type="text" id="{{ status.0.id }}" class="flag-input" placeholder="Enter the flag here" />
+                    <button type="button" class="submit-btn" onclick="checkFlag({{ status.0.id }})">Submit</button>
+                </div>
                 {% endif %}
             </div>
-        </a>
-        {% else %}
-        <div class='col-lg-3 col-md-4 col-sm-6 col-xs-12'>
-            <div id="box{{ status.0.id }}" class="box locked p-3">
-                <div class="centered-div">
-                    <h4>{{ status.0.name }}</h4>
-                    <p>Points: {{ status.0.points }}</p>
+            {% else %}
+            <div id="box{{ status.0.id }}" class="challenge-box locked">
+                <div class="challenge-header">
+                    <h4 class="challenge-title">{{ status.0.name }}</h4>
+                    <p class="challenge-points">{{ status.0.points }} points</p>
                 </div>
-                <div class="centered-div">
-                    <p>This challenge is currently unavailable.</p>
+                <div class="challenge-content">
+                    <p class="challenge-description">This challenge is currently unavailable.</p>
                 </div>
             </div>
+            {% endif %}
+            {% endfor %}
         </div>
-        {% endif %}
-        {% endfor %}
     </div>
-</div>
-{% endfor %}
+    {% endfor %}
 </div>
 {% endblock %}
