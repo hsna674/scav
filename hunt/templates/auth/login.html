@@ -3,15 +3,34 @@
 
 {% block head %}
     <link rel='stylesheet' href="{% static 'css/login.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 {% endblock %}
 
 {% block main %}
-    <div class='header' style='text-align:left;'>
-        <img class='header_img' src="{% static 'img/favicon.png' %}"/>
-        <h1 class='header_title'>Hoco Hunt 2025</h1>
+<div class="login-container">
+    <div class="login-card">
+        <div class="login-header">
+            <div class="logo-container">
+                <img class="logo" src="{% static 'img/favicon.png' %}" alt="Hoco Hunt Logo"/>
+            </div>
+            <h1 class="title">Hoco Hunt 2025</h1>
+            <p class="subtitle">Welcome back! Please sign in to continue your adventure.</p>
+        </div>
+        
+        <div class="login-content">
+            <div class="login-action">
+                <a href="{% url 'social:begin' 'ion' %}{% if request.GET.next %}?next={{ request.GET.next|urlencode }}{% endif %}" class="btn-ion">
+                    <i class="fas fa-sign-in-alt"></i>
+                    <span>Sign in with Ion</span>
+                </a>
+            </div>
+        </div>
     </div>
-    <div class='login-box'>
-        <p><b>Login in with your Ion account</b> to access the Hoco Hunt 2025.</p>
-        <a href="{% url 'social:begin' 'ion' %}{% if request.GET.next %}?next={{ request.GET.next|urlencode }}{% endif %}" class='btn btn-ion'>Log in with Ion</a>
+
+    <div class="background-decoration">
+        <div class="circle circle-1"></div>
+        <div class="circle circle-2"></div>
+        <div class="circle circle-3"></div>
     </div>
+</div>
 {% endblock %}
