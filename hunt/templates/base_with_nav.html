@@ -21,11 +21,6 @@
         <ul class="dropdown-menu dropdown-menu-right">
           {% if user.is_authenticated %}
           <li><h3 class="drop-item">{{ user.username }}</h3></li>
-          <li>
-            <a class="drop-item" href="{% url 'main:overview' %}"
-              ><h3 class="drop-item">Overview</h3></a
-            >
-          </li>
           {% if user.is_participant %}
           <li>
             <a class="drop-item" href="{% url 'main:index' %}"
