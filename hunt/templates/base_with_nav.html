@@ -40,6 +40,13 @@
               ><h3 class="drop-item">Support</h3></a
             >
           </li>
+          {% if user.is_staff %}
+          <li>
+            <a class="drop-item" href="{% url 'admin:index' %}">
+              <h3 class="drop-item">Admin</h3>
+            </a>
+          </li>
+          {% endif %}
           <li>
             <a class="drop-item" href="{% url 'auth:logout' %}"
               ><h3 class="drop-item">Logout</h3></a
