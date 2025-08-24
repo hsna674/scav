@@ -79,6 +79,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "hunt.apps.main.context_processors.hunt_context",
             ],
         },
     },
@@ -214,3 +215,6 @@ if SECRET_KEY is None:
 # Site enabled toggle. Set to False to put site in maintenance mode (superusers still allowed).
 # Placed after secret import intentionally so only this file controls the toggle.
 SITE_ENABLED = False
+
+# Hunt year - update this each year to change the year displayed throughout the site
+HUNT_YEAR = 2025
