@@ -8,20 +8,25 @@ register = template.Library()
 @register.filter
 def linkify(text):
     """
-    Convert link markers in text to clickable HTML links.
+    Convert link markers in text to clickable HTML links and handle line breaks.
 
     Supports the following formats:
     - [text](url) - Markdown-style links
     - [url] - Simple URL in brackets
     - http://example.com or https://example.com - Bare URLs
+    - \n - New line (converted to <br>)
 
     Examples:
     - "Check out [this awesome site](https://example.com) for more info"
     - "Visit [https://example.com] to learn more"
     - "Go to https://example.com"
+    - "First line\nSecond line" - Creates line break
     """
     if not text:
         return text
+
+    # First, handle line breaks - convert \n to <br>
+    text = text.replace("\\n", "<br>")
 
     # Pattern for markdown-style links: [text](url)
     markdown_pattern = r"\[([^\]]+)\]\(([^)]+)\)"
@@ -60,11 +65,15 @@ def linkify(text):
 def linkify_simple(text):
     """
     A simpler version that only handles a custom link marker format: {text|url}
+    and line breaks.
 
-    Example: "Check out {this awesome site|https://example.com} for more info"
+    Example: "Check out {this awesome site|https://example.com} for more info\nNext line"
     """
     if not text:
         return text
+
+    # First, handle line breaks - convert \n to <br>
+    text = text.replace("\\n", "<br>")
 
     # Pattern for custom format: {text|url}
     pattern = r"\{([^|]+)\|([^}]+)\}"
