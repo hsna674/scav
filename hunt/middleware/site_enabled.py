@@ -40,12 +40,12 @@ class SiteEnabledMiddleware:
         if is_exempt_path(path):
             return self.get_response(request)
 
-        # Allow superusers
+        # Allow superusers and committee members
         try:
             if (
                 hasattr(request, "user")
                 and request.user.is_authenticated
-                and request.user.is_superuser
+                and (request.user.is_superuser or request.user.is_committee)
             ):
                 return self.get_response(request)
         except Exception:

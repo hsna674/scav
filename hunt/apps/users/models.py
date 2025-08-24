@@ -29,11 +29,14 @@ class User(AbstractBaseUser):
     is_student = models.BooleanField(default=False, null=False)
     graduation_year = models.IntegerField(null=True)
     email = models.EmailField(max_length=50, null=False, blank=False)
-    is_superuser = models.BooleanField(default=False, null=False) 
-    _is_staff = models.BooleanField(default=False, null=False)   
+    is_superuser = models.BooleanField(default=False, null=False)
+    _is_staff = models.BooleanField(default=False, null=False)
+    is_committee = models.BooleanField(default=False, null=False)
     dark_mode = models.BooleanField(default=False, null=False)
 
-    challenges_done = models.ManyToManyField(Challenge, related_name="users_that_completed", blank=True)
+    challenges_done = models.ManyToManyField(
+        Challenge, related_name="users_that_completed", blank=True
+    )
 
     last_submission_time = models.DateTimeField(default=tz.now)
 

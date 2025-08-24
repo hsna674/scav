@@ -1,5 +1,4 @@
 from django.shortcuts import render, get_object_or_404
-from django.contrib.admin.views.decorators import staff_member_required
 from django.http import JsonResponse
 from django.db.models import Count, Q, Sum
 from django.utils import timezone
@@ -8,12 +7,13 @@ from django.core.paginator import Paginator
 from django.contrib.auth import get_user_model
 
 from .models import ActivityLog, FlagSubmission, ChallengeCompletion
+from .decorators import staff_or_committee_required
 from ..main.models import Challenge, Class
 
 User = get_user_model()
 
 
-@staff_member_required
+@staff_or_committee_required
 def activity_dashboard(request):
     """Main dashboard showing all site activity"""
 
@@ -78,7 +78,7 @@ def activity_dashboard(request):
     return render(request, "logging/dashboard.html", context)
 
 
-@staff_member_required
+@staff_or_committee_required
 def flag_submissions(request):
     """View all flag submissions with filtering"""
 
@@ -128,7 +128,7 @@ def flag_submissions(request):
     return render(request, "logging/flag_submissions.html", context)
 
 
-@staff_member_required
+@staff_or_committee_required
 def challenge_submissions(request, challenge_id):
     """View all submissions for a specific challenge"""
 
@@ -184,7 +184,7 @@ def challenge_submissions(request, challenge_id):
     return render(request, "logging/challenge_submissions.html", context)
 
 
-@staff_member_required
+@staff_or_committee_required
 def user_activity(request, user_id):
     """View all activity for a specific user"""
 
@@ -232,7 +232,7 @@ def user_activity(request, user_id):
     return render(request, "logging/user_activity.html", context)
 
 
-@staff_member_required
+@staff_or_committee_required
 def class_leaderboard(request):
     """View challenge completion statistics by class"""
 
@@ -303,7 +303,7 @@ def class_leaderboard(request):
     return render(request, "logging/class_leaderboard.html", context)
 
 
-@staff_member_required
+@staff_or_committee_required
 def real_time_activity(request):
     """AJAX endpoint for real-time activity updates"""
 
@@ -329,7 +329,7 @@ def real_time_activity(request):
     return JsonResponse({"activities": activity_data})
 
 
-@staff_member_required
+@staff_or_committee_required
 def export_data(request):
     """Export activity data (placeholder for future CSV/JSON export)"""
     # This could be expanded to export data in various formats

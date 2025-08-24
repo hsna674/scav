@@ -33,12 +33,14 @@
               ><h3 class="drop-item">Support</h3></a
             >
           </li>
-          {% if user.is_staff %}
+          {% if user.is_staff or user.is_committee %}
           <li>
             <a class="drop-item" href="{% url 'logging:dashboard' %}">
               <h3 class="drop-item">Activity Dashboard</h3>
             </a>
           </li>
+          {% endif %}
+          {% if user.is_staff %}
           <li>
             <a class="drop-item" href="{% url 'admin:index' %}">
               <h3 class="drop-item">Admin</h3>
