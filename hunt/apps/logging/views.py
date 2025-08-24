@@ -6,7 +6,7 @@ from datetime import timedelta
 from django.core.paginator import Paginator
 from django.contrib.auth import get_user_model
 
-from .models import ActivityLog, FlagSubmission, ChallengeCompletion
+from .models import ActivityLog, FlagSubmission, ChallengeCompletion, ActivityType
 from .decorators import staff_or_committee_required
 from ..main.models import Challenge, Class
 
@@ -21,14 +21,17 @@ def activity_dashboard(request):
     hours = int(request.GET.get("hours", 24))
     since = timezone.now() - timedelta(hours=hours)
 
-    # Recent activities
-    recent_activities = ActivityLog.objects.filter(timestamp__gte=since).select_related(
-        "user"
-    )[:50]
+    # Recent activities (exclude page views)
+    recent_activities = (
+        ActivityLog.objects.filter(timestamp__gte=since)
+        .exclude(activity_type=ActivityType.PAGE_VIEW)
+        .select_related("user")[:50]
+    )
 
-    # Activity counts by type
+    # Activity counts by type (exclude page views)
     activity_counts = (
         ActivityLog.objects.filter(timestamp__gte=since)
+        .exclude(activity_type=ActivityType.PAGE_VIEW)
         .values("activity_type")
         .annotate(count=Count("id"))
         .order_by("-count")
@@ -42,9 +45,10 @@ def activity_dashboard(request):
         total_points=Sum("points_awarded"),
     )
 
-    # Most active users
+    # Most active users (exclude page views)
     active_users = (
         ActivityLog.objects.filter(timestamp__gte=since)
+        .exclude(activity_type=ActivityType.PAGE_VIEW)
         .values("user__id", "user__username", "user__graduation_year")
         .annotate(activity_count=Count("id"))
         .order_by("-activity_count")[:10]
@@ -190,8 +194,12 @@ def user_activity(request, user_id):
 
     user = get_object_or_404(User, id=user_id)
 
-    # Get all activities
-    activities = ActivityLog.objects.filter(user=user).order_by("-timestamp")
+    # Get all activities (exclude page views)
+    activities = (
+        ActivityLog.objects.filter(user=user)
+        .exclude(activity_type=ActivityType.PAGE_VIEW)
+        .order_by("-timestamp")
+    )
     flag_submissions = (
         FlagSubmission.objects.filter(user=user)
         .select_related("challenge")
@@ -210,7 +218,7 @@ def user_activity(request, user_id):
 
     # User stats
     stats = {
-        "total_activities": activities.count(),
+        "total_activities": activities.count(),  # Already excludes page views
         "total_submissions": flag_submissions.count(),
         "correct_submissions": flag_submissions.filter(is_correct=True).count(),
         "total_completions": completions.count(),
@@ -307,10 +315,11 @@ def class_leaderboard(request):
 def real_time_activity(request):
     """AJAX endpoint for real-time activity updates"""
 
-    # Get activities from last 5 minutes
+    # Get activities from last 5 minutes (exclude page views)
     since = timezone.now() - timedelta(minutes=5)
     activities = (
         ActivityLog.objects.filter(timestamp__gte=since)
+        .exclude(activity_type=ActivityType.PAGE_VIEW)
         .select_related("user")
         .order_by("-timestamp")[:20]
     )
