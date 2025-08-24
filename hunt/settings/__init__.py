@@ -20,17 +20,19 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-=6^bbhfem^#pl*@w29%mo$z#r5_#2d5-m@9q0&9egz@qtcfbah"
+# SECRET_KEY should be defined in secret.py
+SECRET_KEY = None  # Will be overridden by secret.py
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# DEBUG should be defined in secret.py
+DEBUG = False  # Default to False for security
 
 ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
     "hunt.sites.tjhsst.edu",
     "hunt.tjhsst.edu",
-    "*",
+    # Additional hosts should be defined in secret.py
 ]
 
 CSRF_TRUSTED_ORIGINS = ["https://hunt.sites.tjhsst.edu", "https://hunt.tjhsst.edu"]
@@ -193,6 +195,10 @@ try:
     from .secret import *  # noqa
 except ImportError:
     pass
+
+# Validate that required settings are properly configured
+if SECRET_KEY is None:
+    raise ValueError("SECRET_KEY must be defined in secret.py")
 
 # Site enabled toggle. Set to False to put site in maintenance mode (superusers still allowed).
 # Placed after secret import intentionally so only this file controls the toggle.
