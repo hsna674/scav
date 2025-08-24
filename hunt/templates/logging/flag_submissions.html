@@ -83,11 +83,12 @@
                                     <th>Submitted Flag</th>
                                     <th>Points</th>
                                     <th>IP Address</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for submission in page_obj %}
-                                <tr>
+                                <tr id="submission-{{ submission.id }}">
                                     <td>{{ submission.timestamp|date:"M d, H:i:s" }}</td>
                                     <td>
                                         <a href="{% url 'logging:user_activity' submission.user.id %}">{{ submission.user.username }}</a>
@@ -117,10 +118,19 @@
                                         {% endif %}
                                     </td>
                                     <td><small class="text-muted">{{ submission.ip_address }}</small></td>
+                                    <td>
+                                        {% if submission.is_correct and submission.points_awarded > 0 %}
+                                        <button class="btn btn-sm btn-danger" onclick="invalidateSubmission({{ submission.id }})">
+                                            Invalidate
+                                        </button>
+                                        {% else %}
+                                        -
+                                        {% endif %}
+                                    </td>
                                 </tr>
                                 {% empty %}
                                 <tr>
-                                    <td colspan="7" class="text-center text-muted">No submissions found</td>
+                                    <td colspan="8" class="text-center text-muted">No submissions found</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -208,4 +218,60 @@ $(document).ready(function() {
 }
 {% endif %}
 </style>
+
+<script>
+function invalidateSubmission(submissionId) {
+    if (!confirm('Are you sure you want to invalidate this submission? This will remove the completion and points from the user and class.')) {
+        return;
+    }
+    
+    fetch(`{% url 'logging:invalidate_submission' 0 %}`.replace('0', submissionId), {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Remove the row or update it to show invalidated status
+            const row = document.getElementById(`submission-${submissionId}`);
+            if (row) {
+                // Update the points column to show invalidated
+                const pointsCell = row.cells[5];
+                pointsCell.innerHTML = '<span class="badge badge-secondary">Invalidated</span>';
+                
+                // Update the actions column
+                const actionsCell = row.cells[7];
+                actionsCell.innerHTML = 'Invalidated';
+            }
+            
+            alert(data.message);
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while invalidating the submission.');
+    });
+}
+
+// Set dark mode class on body
+$(document).ready(function() {
+    {% if dark_mode %}
+    console.log('Dark mode is enabled for user');
+    document.body.classList.add('dark-mode');
+    console.log('Dark mode class added to body:', document.body.classList.contains('dark-mode'));
+    
+    // Force refresh styles for cards
+    setTimeout(function() {
+        $('.card').each(function() {
+            $(this).removeClass('dark-mode').addClass('dark-mode');
+        });
+    }, 100);
+    {% endif %}
+});
+</script>
 {% endblock %}

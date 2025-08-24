@@ -102,7 +102,7 @@
                 </div>
                 <div class="card-body">
                     {% for completion in completions %}
-                    <div class="d-flex justify-content-between align-items-center mb-2 p-2 border-bottom">
+                    <div class="d-flex justify-content-between align-items-center mb-2 p-2 border-bottom" id="completion-{{ completion.id }}">
                         <div>
                             <strong>{{ completion.challenge.name }}</strong>
                             <br>
@@ -113,6 +113,9 @@
                         </div>
                         <div>
                             <span class="badge badge-primary">{{ completion.points_earned }} pts</span>
+                            <button class="btn btn-sm btn-danger ml-2" onclick="invalidateCompletion({{ completion.id }})">
+                                Invalidate
+                            </button>
                         </div>
                     </div>
                     {% empty %}
@@ -255,4 +258,55 @@ $(document).ready(function() {
 }
 {% endif %}
 </style>
+
+<script>
+function invalidateCompletion(completionId) {
+    if (!confirm('Are you sure you want to invalidate this completion? This will remove the points from the user and class.')) {
+        return;
+    }
+    
+    fetch(`{% url 'logging:invalidate_completion' 0 %}`.replace('0', completionId), {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Remove the completion from the UI
+            const completionDiv = document.getElementById(`completion-${completionId}`);
+            if (completionDiv) {
+                completionDiv.style.opacity = '0.5';
+                completionDiv.innerHTML = '<div class="text-muted">Completion invalidated</div>';
+            }
+            
+            alert(data.message);
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while invalidating the completion.');
+    });
+}
+
+// Set dark mode class on body
+$(document).ready(function() {
+    {% if dark_mode %}
+    console.log('Dark mode is enabled for user');
+    document.body.classList.add('dark-mode');
+    console.log('Dark mode class added to body:', document.body.classList.contains('dark-mode'));
+    
+    // Force refresh styles for cards
+    setTimeout(function() {
+        $('.card').each(function() {
+            $(this).removeClass('dark-mode').addClass('dark-mode');
+        });
+    }, 100);
+    {% endif %}
+});
+</script>
 {% endblock %}

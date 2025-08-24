@@ -109,11 +109,80 @@ class FlagSubmissionAdmin(admin.ModelAdmin):
 
     submitted_flag_preview.short_description = "Submitted Flag"
 
+    def invalidate_submissions(self, request, queryset):
+        """Admin action to invalidate flag submissions"""
+        count = 0
+        for submission in queryset:
+            if submission.is_correct and submission.points_awarded > 0:
+                # Find and remove the corresponding ChallengeCompletion
+                try:
+                    completion = ChallengeCompletion.objects.get(
+                        user=submission.user, challenge=submission.challenge
+                    )
+                    completion.delete()
+
+                    # Remove from user's completed challenges
+                    submission.user.challenges_done.remove(submission.challenge)
+
+                    # Remove from class completed challenges if no other completions exist
+                    from ..main.models import Class
+
+                    class_obj = Class.objects.get(
+                        year=str(submission.user.graduation_year)
+                    )
+                    other_completions = ChallengeCompletion.objects.filter(
+                        challenge=submission.challenge,
+                        class_year=submission.user.graduation_year,
+                    ).exists()
+                    if not other_completions:
+                        class_obj.challenges_completed.remove(submission.challenge)
+
+                        # If this was an exclusive challenge, unlock it
+                        if submission.challenge.is_exclusive:
+                            submission.challenge.locked = False
+                            submission.challenge.save()
+
+                    # Log the invalidation action
+                    from .utils import log_admin_action
+
+                    log_admin_action(
+                        user=request.user,
+                        action="invalidate_submission",
+                        details={
+                            "invalidated_user": submission.user.username,
+                            "challenge_id": submission.challenge.id,
+                            "challenge_name": submission.challenge.name,
+                            "points_removed": submission.points_awarded,
+                            "submission_id": submission.id,
+                        },
+                        request=request,
+                    )
+
+                except ChallengeCompletion.DoesNotExist:
+                    pass
+
+                # Mark submission as invalidated
+                submission.points_awarded = 0
+                submission.save()
+                count += 1
+
+        if count == 1:
+            message = "1 submission was invalidated."
+        else:
+            message = f"{count} submissions were invalidated."
+        self.message_user(request, message)
+
+    invalidate_submissions.short_description = (
+        "Invalidate selected submissions (remove points & completions)"
+    )
+
     def has_add_permission(self, request):
         return False
 
     def has_change_permission(self, request, obj=None):
         return False
+
+    actions = ["invalidate_submissions"]
 
 
 @admin.register(ChallengeCompletion)
@@ -158,11 +227,75 @@ class ChallengeCompletionAdmin(admin.ModelAdmin):
     challenge_link.short_description = "Challenge"
     challenge_link.admin_order_field = "challenge__name"
 
+    def invalidate_completions(self, request, queryset):
+        """Admin action to invalidate challenge completions"""
+        count = 0
+        for completion in queryset:
+            # Remove from user's completed challenges
+            completion.user.challenges_done.remove(completion.challenge)
+
+            # Remove from class completed challenges if no other completions exist
+            from ..main.models import Class
+
+            class_obj = Class.objects.get(year=completion.class_year)
+            other_completions = (
+                ChallengeCompletion.objects.filter(
+                    challenge=completion.challenge, class_year=completion.class_year
+                )
+                .exclude(id=completion.id)
+                .exists()
+            )
+            if not other_completions:
+                class_obj.challenges_completed.remove(completion.challenge)
+
+                # If this was an exclusive challenge, unlock it
+                if completion.challenge.is_exclusive:
+                    completion.challenge.locked = False
+                    completion.challenge.save()
+
+            # Zero out points on corresponding flag submission
+            FlagSubmission.objects.filter(
+                user=completion.user, challenge=completion.challenge, is_correct=True
+            ).update(points_awarded=0)
+
+            # Log the invalidation action
+            from .utils import log_admin_action
+
+            log_admin_action(
+                user=request.user,
+                action="invalidate_completion",
+                details={
+                    "invalidated_user": completion.user.username,
+                    "challenge_id": completion.challenge.id,
+                    "challenge_name": completion.challenge.name,
+                    "points_removed": completion.points_earned,
+                    "completion_id": completion.id,
+                    "class_year": completion.class_year,
+                },
+                request=request,
+            )
+
+            # Delete the completion
+            completion.delete()
+            count += 1
+
+        if count == 1:
+            message = "1 completion was invalidated."
+        else:
+            message = f"{count} completions were invalidated."
+        self.message_user(request, message)
+
+    invalidate_completions.short_description = (
+        "Invalidate selected completions (remove points)"
+    )
+
     def has_add_permission(self, request):
         return False
 
     def has_change_permission(self, request, obj=None):
         return False
+
+    actions = ["invalidate_completions"]
 
 
 @admin.register(PageView)

@@ -8,6 +8,7 @@ from django.contrib.auth import get_user_model
 
 from .models import ActivityLog, FlagSubmission, ChallengeCompletion, ActivityType
 from .decorators import staff_or_committee_required
+from .utils import log_admin_action
 from ..main.models import Challenge, Class
 
 User = get_user_model()
@@ -343,3 +344,144 @@ def export_data(request):
     """Export activity data (placeholder for future CSV/JSON export)"""
     # This could be expanded to export data in various formats
     pass
+
+
+@staff_or_committee_required
+def invalidate_submission(request, submission_id):
+    """Invalidate a single flag submission"""
+    if request.method != "POST":
+        return JsonResponse({"error": "POST required"}, status=405)
+
+    try:
+        submission = FlagSubmission.objects.get(id=submission_id)
+
+        if not submission.is_correct or submission.points_awarded == 0:
+            return JsonResponse(
+                {"error": "Submission is not a valid completion"}, status=400
+            )
+
+        # Find and remove the corresponding ChallengeCompletion
+        try:
+            completion = ChallengeCompletion.objects.get(
+                user=submission.user, challenge=submission.challenge
+            )
+            completion.delete()
+
+            # Remove from user's completed challenges
+            submission.user.challenges_done.remove(submission.challenge)
+
+            # Remove from class completed challenges if no other completions exist
+            class_obj = Class.objects.get(year=str(submission.user.graduation_year))
+            other_completions = ChallengeCompletion.objects.filter(
+                challenge=submission.challenge,
+                class_year=submission.user.graduation_year,
+            ).exists()
+            if not other_completions:
+                class_obj.challenges_completed.remove(submission.challenge)
+
+                # If this was an exclusive challenge, unlock it
+                if submission.challenge.is_exclusive:
+                    submission.challenge.locked = False
+                    submission.challenge.save()
+
+            # Log the invalidation action
+            log_admin_action(
+                user=request.user,
+                action="invalidate_submission",
+                details={
+                    "invalidated_user": submission.user.username,
+                    "challenge_id": submission.challenge.id,
+                    "challenge_name": submission.challenge.name,
+                    "points_removed": submission.points_awarded,
+                    "submission_id": submission.id,
+                },
+                request=request,
+            )
+
+        except ChallengeCompletion.DoesNotExist:
+            pass
+
+        # Mark submission as invalidated
+        submission.points_awarded = 0
+        submission.save()
+
+        return JsonResponse(
+            {
+                "success": True,
+                "message": f"Submission for {submission.challenge.name} by {submission.user.username} has been invalidated",
+            }
+        )
+
+    except FlagSubmission.DoesNotExist:
+        return JsonResponse({"error": "Submission not found"}, status=404)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+@staff_or_committee_required
+def invalidate_completion(request, completion_id):
+    """Invalidate a single challenge completion"""
+    if request.method != "POST":
+        return JsonResponse({"error": "POST required"}, status=405)
+
+    try:
+        completion = ChallengeCompletion.objects.get(id=completion_id)
+
+        # Remove from user's completed challenges
+        completion.user.challenges_done.remove(completion.challenge)
+
+        # Remove from class completed challenges if no other completions exist
+        class_obj = Class.objects.get(year=completion.class_year)
+        other_completions = (
+            ChallengeCompletion.objects.filter(
+                challenge=completion.challenge, class_year=completion.class_year
+            )
+            .exclude(id=completion.id)
+            .exists()
+        )
+        if not other_completions:
+            class_obj.challenges_completed.remove(completion.challenge)
+
+            # If this was an exclusive challenge, unlock it
+            if completion.challenge.is_exclusive:
+                completion.challenge.locked = False
+                completion.challenge.save()
+
+        # Zero out points on corresponding flag submission
+        FlagSubmission.objects.filter(
+            user=completion.user, challenge=completion.challenge, is_correct=True
+        ).update(points_awarded=0)
+
+        # Log the invalidation action
+        log_admin_action(
+            user=request.user,
+            action="invalidate_completion",
+            details={
+                "invalidated_user": completion.user.username,
+                "challenge_id": completion.challenge.id,
+                "challenge_name": completion.challenge.name,
+                "points_removed": completion.points_earned,
+                "completion_id": completion.id,
+                "class_year": completion.class_year,
+            },
+            request=request,
+        )
+
+        # Store info for response before deletion
+        challenge_name = completion.challenge.name
+        username = completion.user.username
+
+        # Delete the completion
+        completion.delete()
+
+        return JsonResponse(
+            {
+                "success": True,
+                "message": f"Completion for {challenge_name} by {username} has been invalidated",
+            }
+        )
+
+    except ChallengeCompletion.DoesNotExist:
+        return JsonResponse({"error": "Completion not found"}, status=404)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
