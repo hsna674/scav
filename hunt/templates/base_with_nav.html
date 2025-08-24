@@ -1,4 +1,5 @@
 {% extends 'base.html' %} {% load static %} {% block root %}
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 <div id="root">
   <div class="row header">
     <div class="col-lg-5 col-md-6 col-sm-12 col-xs-12">
@@ -9,7 +10,7 @@
     </div>
     <div class="col-lg-2 col-md-1"></div>
     <div class="col-lg-5 col-md-5 col-sm-12 col-xs-12 nav_section">
-      <a class="header_nav" href="{% url 'main:toggledark' %}" style="text-decoration: none; padding: 8px 16px; border-radius: 8px; transition: all 0.3s ease; margin-right: 10px;">
+      <a class="header_nav" href="{% url 'main:toggledark' %}" style="text-decoration: none; padding: 8px 16px; border-radius: 8px; transition: all 0.3s ease; margin-right: 10px; margin-top: 8px;">
         <i class="fas fa-moon"></i>
         Dark Mode
       </a>
@@ -48,7 +49,12 @@
           </li>
           {% endif %}
           <li>
-            <a class="drop-item" href="{% url 'auth:logout' %}"
+            <a class="drop-item" href="https://discord.gg/UnVRYEE9" target="_blank"
+              ><h3 class="drop-item">Discord <i class="fa-brands fa-discord"></i></h3></a
+            >
+          </li>
+          <li>
+            <a class="drop-item" href="{% url 'auth:logout' %}" 
               ><h3 class="drop-item">Logout</h3></a
             >
           </li>
