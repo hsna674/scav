@@ -164,4 +164,10 @@ def validate_flag(request):
 
 @login_required
 def support(request):
-    return render(request, "main/support.html")
+    return render(
+        request,
+        "main/support.html",
+        {
+            "dark_mode": request.user.dark_mode,
+        },
+    )

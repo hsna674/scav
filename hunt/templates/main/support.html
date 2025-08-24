@@ -42,4 +42,17 @@
     </p>
   </div>
 </div>
+
+<script>
+// Set dark mode class on body
+$(document).ready(function() {
+    {% if dark_mode %}
+    console.log('Dark mode is enabled for user');
+    document.body.classList.add('dark-mode');
+    console.log('Dark mode class added to body:', document.body.classList.contains('dark-mode'));
+    {% else %}
+    console.log('Dark mode is disabled for user');
+    {% endif %}
+});
+</script>
 {% endblock %}
