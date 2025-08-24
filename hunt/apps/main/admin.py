@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django.utils.html import format_html
+from django.urls import reverse
 
 from .models import Challenge, Class, Category
 
@@ -15,7 +17,15 @@ class ChallengeAdmin(admin.ModelAdmin):
         "unblocked",
         "category",
     )
-    list_display = ("name", "points", "exclusive", "unblocked", "locked", "category")
+    list_display = (
+        "name",
+        "points",
+        "exclusive",
+        "unblocked",
+        "locked",
+        "category",
+        "submissions_link",
+    )
     list_filter = ("exclusive", "unblocked", "locked", "category")
     readonly_fields = ("locked",)
 
@@ -28,6 +38,15 @@ class ChallengeAdmin(admin.ModelAdmin):
                 "unblocked"
             ].help_text = "Controls whether this challenge is available to participants"
         return form
+
+    def submissions_link(self, obj):
+        """Link to view submissions for this challenge"""
+        if obj.pk:
+            url = reverse("logging:challenge_submissions", args=[obj.pk])
+            return format_html('<a href="{}" target="_blank">View Submissions</a>', url)
+        return "-"
+
+    submissions_link.short_description = "Submissions"
 
     def release_challenges(self, request, queryset):
         """Bulk action to release selected challenges"""
@@ -45,3 +64,8 @@ class ChallengeAdmin(admin.ModelAdmin):
 
 admin.site.register(Category)
 admin.site.register(Class)
+
+# Customize the admin index page
+admin.site.site_header = "Scavenger Hunt Administration"
+admin.site.site_title = "Scav Hunt Admin"
+admin.site.index_title = "Welcome to Scavenger Hunt Administration"

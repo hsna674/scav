@@ -1,0 +1,157 @@
+{% extends "base_with_nav.html" %}
+
+{% block title %}Flag Submissions{% endblock %}
+
+{% block main %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h1>Flag Submissions</h1>
+            <p class="text-muted">View and filter all flag submissions</p>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="get" class="row">
+                        <div class="col-md-3">
+                            <label for="challenge" class="form-label">Challenge</label>
+                            <select name="challenge" id="challenge" class="form-control">
+                                <option value="">All Challenges</option>
+                                {% for challenge in challenges %}
+                                <option value="{{ challenge.id }}" {% if current_filters.challenge == challenge.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ challenge.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="correct" class="form-label">Result</label>
+                            <select name="correct" id="correct" class="form-control">
+                                <option value="">All</option>
+                                <option value="true" {% if current_filters.correct == "true" %}selected{% endif %}>Correct</option>
+                                <option value="false" {% if current_filters.correct == "false" %}selected{% endif %}>Incorrect</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="class" class="form-label">Class</label>
+                            <select name="class" id="class" class="form-control">
+                                <option value="">All Classes</option>
+                                {% for class in classes %}
+                                <option value="{{ class.year }}" {% if current_filters.class == class.year %}selected{% endif %}>
+                                    {{ class.get_year_display }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="user" class="form-label">User</label>
+                            <select name="user" id="user" class="form-control">
+                                <option value="">All Users</option>
+                                {% for user in users %}
+                                <option value="{{ user.id }}" {% if current_filters.user == user.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ user.username }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary">Filter</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Submissions Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>User</th>
+                                    <th>Challenge</th>
+                                    <th>Result</th>
+                                    <th>Submitted Flag</th>
+                                    <th>Points</th>
+                                    <th>IP Address</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for submission in page_obj %}
+                                <tr>
+                                    <td>{{ submission.timestamp|date:"M d, H:i:s" }}</td>
+                                    <td>
+                                        <a href="{% url 'logging:user_activity' submission.user.id %}">{{ submission.user.username }}</a>
+                                        <br><small class="text-muted">{{ submission.user.graduation_year }}</small>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'logging:challenge_submissions' submission.challenge.id %}">{{ submission.challenge.name }}</a>
+                                        {% if submission.challenge.category %}
+                                        <br><small class="text-muted">{{ submission.challenge.category.name }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if submission.is_correct %}
+                                        <span class="badge badge-success">✓ Correct</span>
+                                        {% else %}
+                                        <span class="badge badge-danger">✗ Incorrect</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <code>{{ submission.submitted_flag|truncatechars:30 }}</code>
+                                    </td>
+                                    <td>
+                                        {% if submission.points_awarded > 0 %}
+                                        <span class="badge badge-primary">{{ submission.points_awarded }}</span>
+                                        {% else %}
+                                        -
+                                        {% endif %}
+                                    </td>
+                                    <td><small class="text-muted">{{ submission.ip_address }}</small></td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted">No submissions found</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    {% if page_obj.has_other_pages %}
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Previous</a>
+                            </li>
+                            {% endif %}
+                            
+                            <li class="page-item active">
+                                <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                            </li>
+                            
+                            {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Next</a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

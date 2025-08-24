@@ -1,0 +1,181 @@
+{% extends "base_with_nav.html" %}
+
+{% block title %}{{ challenge.name }} - Submissions{% endblock %}
+
+{% block main %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h1>{{ challenge.name }} - Submissions</h1>
+            <p class="text-muted">{{ challenge.short_description }}</p>
+        </div>
+    </div>
+
+    <!-- Challenge Info -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Challenge Details</h5>
+                    <ul class="list-unstyled">
+                        <li><strong>Points:</strong> {{ challenge.points }}</li>
+                        <li><strong>Category:</strong> {{ challenge.category.name|default:"Uncategorized" }}</li>
+                        <li><strong>Exclusive:</strong> {% if challenge.exclusive %}Yes{% else %}No{% endif %}</li>
+                        <li><strong>Locked:</strong> {% if challenge.locked %}Yes{% else %}No{% endif %}</li>
+                        <li><strong>Released:</strong> {% if challenge.unblocked %}Yes{% else %}No{% endif %}</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Submission Statistics</h5>
+                    <ul class="list-unstyled">
+                        <li><strong>Total Submissions:</strong> {{ stats.total }}</li>
+                        <li><strong>Correct Submissions:</strong> {{ stats.correct }}</li>
+                        <li><strong>Unique Users:</strong> {{ stats.unique_users }}</li>
+                        <li><strong>Success Rate:</strong> 
+                            {% if stats.total > 0 %}
+                                {{ stats.correct }}/{{ stats.total }} ({{ stats.success_rate }}%)
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </li>
+                        <li><strong>Points Awarded:</strong> {{ stats.total_points|default:0 }}</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Rate by Class -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Success Rate by Class</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Class</th>
+                                    <th>Total Submissions</th>
+                                    <th>Correct Submissions</th>
+                                    <th>Success Rate</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for class_stat in class_stats %}
+                                <tr>
+                                    <td>{{ class_stat.class.get_year_display }}</td>
+                                    <td>{{ class_stat.total }}</td>
+                                    <td>{{ class_stat.correct }}</td>
+                                    <td>
+                                        {% if class_stat.total > 0 %}
+                                        <div class="progress">
+                                            <div class="progress-bar" role="progressbar" style="width: {{ class_stat.rate }}%">
+                                                {{ class_stat.rate|floatformat:1 }}%
+                                            </div>
+                                        </div>
+                                        {% else %}
+                                        -
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- All Submissions -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>All Submissions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>User</th>
+                                    <th>Class</th>
+                                    <th>Result</th>
+                                    <th>Submitted Flag</th>
+                                    <th>Points</th>
+                                    <th>IP Address</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for submission in page_obj %}
+                                <tr>
+                                    <td>{{ submission.timestamp|date:"M d, H:i:s" }}</td>
+                                    <td>
+                                        <a href="{% url 'logging:user_activity' submission.user.id %}">{{ submission.user.username }}</a>
+                                    </td>
+                                    <td>{{ submission.user.graduation_year }}</td>
+                                    <td>
+                                        {% if submission.is_correct %}
+                                        <span class="badge badge-success">✓ Correct</span>
+                                        {% else %}
+                                        <span class="badge badge-danger">✗ Incorrect</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <code>{{ submission.submitted_flag|truncatechars:40 }}</code>
+                                    </td>
+                                    <td>
+                                        {% if submission.points_awarded > 0 %}
+                                        <span class="badge badge-primary">{{ submission.points_awarded }}</span>
+                                        {% else %}
+                                        -
+                                        {% endif %}
+                                    </td>
+                                    <td><small class="text-muted">{{ submission.ip_address }}</small></td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted">No submissions found</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    {% if page_obj.has_other_pages %}
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                            </li>
+                            {% endif %}
+                            
+                            <li class="page-item active">
+                                <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                            </li>
+                            
+                            {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

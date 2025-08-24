@@ -1,0 +1,209 @@
+{% extends "base_with_nav.html" %}
+
+{% block title %}Activity Dashboard{% endblock %}
+
+{% block main %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h1>Site Activity Dashboard</h1>
+            <p class="text-muted">Comprehensive logging and monitoring for all site activities</p>
+        </div>
+    </div>
+
+    <!-- Time Filter -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="btn-group" role="group">
+                <a href="?hours=1" class="btn {% if hours == 1 %}btn-primary{% else %}btn-outline-primary{% endif %}">Last Hour</a>
+                <a href="?hours=24" class="btn {% if hours == 24 %}btn-primary{% else %}btn-outline-primary{% endif %}">Last 24 Hours</a>
+                <a href="?hours=168" class="btn {% if hours == 168 %}btn-primary{% else %}btn-outline-primary{% endif %}">Last Week</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-white bg-info">
+                <div class="card-body">
+                    <h5 class="card-title">Total Activities</h5>
+                    <h2>{{ recent_activities|length }}</h2>
+                    <small>in last {{ hours }} hours</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-success">
+                <div class="card-body">
+                    <h5 class="card-title">Flag Submissions</h5>
+                    <h2>{{ flag_stats.total_submissions|default:0 }}</h2>
+                    <small>{{ flag_stats.correct_submissions|default:0 }} correct</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-warning">
+                <div class="card-body">
+                    <h5 class="card-title">Active Users</h5>
+                    <h2>{{ flag_stats.unique_users|default:0 }}</h2>
+                    <small>unique users</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-primary">
+                <div class="card-body">
+                    <h5 class="card-title">Points Awarded</h5>
+                    <h2>{{ flag_stats.total_points|default:0 }}</h2>
+                    <small>total points</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Links -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Quick Links</h5>
+                    <div class="btn-group" role="group">
+                        <a href="{% url 'logging:flag_submissions' %}" class="btn btn-outline-primary">All Flag Submissions</a>
+                        <a href="{% url 'logging:class_leaderboard' %}" class="btn btn-outline-primary">Class Leaderboard</a>
+                        <a href="/admin/logging/" class="btn btn-outline-secondary">Admin Interface</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Activity Types Breakdown -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Activity Types (Last {{ hours }} hours)</h5>
+                </div>
+                <div class="card-body">
+                    {% for activity in activity_counts %}
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>{{ activity.activity_type|title }}</span>
+                        <span class="badge badge-primary">{{ activity.count }}</span>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted">No activities in this timeframe</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Most Active Users</h5>
+                </div>
+                <div class="card-body">
+                    {% for user in active_users %}
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>
+                            <a href="{% url 'logging:user_activity' user.user__id %}">{{ user.user__username }}</a>
+                            <small class="text-muted">({{ user.user__graduation_year }})</small>
+                        </span>
+                        <span class="badge badge-secondary">{{ user.activity_count }}</span>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted">No user activity in this timeframe</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Class Statistics -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Class Performance (Last {{ hours }} hours)</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Class</th>
+                                    <th>Completions</th>
+                                    <th>Points Earned</th>
+                                    <th>Total Points</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for class_stat in class_stats %}
+                                <tr>
+                                    <td>{{ class_stat.class.get_year_display }}</td>
+                                    <td>{{ class_stat.completions }}</td>
+                                    <td>{{ class_stat.points }}</td>
+                                    <td>{{ class_stat.class.get_points }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activities -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Recent Activities</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>User</th>
+                                    <th>Activity</th>
+                                    <th>Details</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for activity in recent_activities %}
+                                <tr>
+                                    <td>{{ activity.timestamp|date:"M d, H:i" }}</td>
+                                    <td>
+                                        <a href="{% url 'logging:user_activity' activity.user.id %}">{{ activity.user.username }}</a>
+                                    </td>
+                                    <td>{{ activity.get_activity_type_display }}</td>
+                                    <td>
+                                        {% if activity.details %}
+                                            <small class="text-muted">{{ activity.details|truncatechars:50 }}</small>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted">No recent activities</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Auto-refresh every 30 seconds
+setTimeout(function() {
+    location.reload();
+}, 30000);
+</script>
+{% endblock %}

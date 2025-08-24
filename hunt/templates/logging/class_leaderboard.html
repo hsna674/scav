@@ -1,0 +1,138 @@
+{% extends "base_with_nav.html" %}
+
+{% block title %}Class Leaderboard{% endblock %}
+
+{% block main %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h1>Class Leaderboard</h1>
+            <p class="text-muted">Challenge completion statistics and leaderboards by class</p>
+        </div>
+    </div>
+
+    <!-- Time Filter -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="btn-group" role="group">
+                <a href="?days=1" class="btn {% if days == 1 %}btn-primary{% else %}btn-outline-primary{% endif %}">Last Day</a>
+                <a href="?days=7" class="btn {% if days == 7 %}btn-primary{% else %}btn-outline-primary{% endif %}">Last Week</a>
+                <a href="?days=30" class="btn {% if days == 30 %}btn-primary{% else %}btn-outline-primary{% endif %}">Last Month</a>
+                <a href="?days=365" class="btn {% if days == 365 %}btn-primary{% else %}btn-outline-primary{% endif %}">All Time</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Class Statistics -->
+    <div class="row mb-4">
+        {% for class_data in class_data %}
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">{{ class_data.class.get_year_display }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6">
+                            <h3 class="text-primary">{{ class_data.total_completions }}</h3>
+                            <small class="text-muted">Completions</small>
+                        </div>
+                        <div class="col-6">
+                            <h3 class="text-success">{{ class_data.total_points }}</h3>
+                            <small class="text-muted">Points</small>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row">
+                        <div class="col-6">
+                            <p class="mb-1"><strong>Total Users:</strong> {{ class_data.user_count }}</p>
+                            <p class="mb-1"><strong>Active Solvers:</strong> {{ class_data.unique_solvers }}</p>
+                        </div>
+                        <div class="col-6">
+                            <p class="mb-1"><strong>Overall Points:</strong> {{ class_data.class.get_points }}</p>
+                        </div>
+                    </div>
+                    
+                    {% if class_data.top_users %}
+                    <hr>
+                    <h6>Top Contributors ({{ days }} days)</h6>
+                    <div class="list-group list-group-flush">
+                        {% for user in class_data.top_users %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <span>{{ user.user__username }}</span>
+                            <div>
+                                <span class="badge badge-primary">{{ user.completion_count }} solves</span>
+                                <span class="badge badge-success">{{ user.total_points }} pts</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Challenge Difficulty Analysis -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Challenge Difficulty Analysis</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Challenge</th>
+                                    <th>Category</th>
+                                    <th>Points</th>
+                                    <th>Total Submissions</th>
+                                    <th>Correct Submissions</th>
+                                    <th>Success Rate</th>
+                                    <th>Completions</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for challenge in challenge_stats %}
+                                <tr>
+                                    <td>{{ challenge.name }}</td>
+                                    <td>
+                                        {% if challenge.category %}
+                                        <span class="badge badge-secondary">{{ challenge.category.name }}</span>
+                                        {% else %}
+                                        <span class="text-muted">Uncategorized</span>
+                                        {% endif %}
+                                    </td>
+                                    <td><span class="badge badge-primary">{{ challenge.points }}</span></td>
+                                    <td>{{ challenge.total_submissions|default:0 }}</td>
+                                    <td>{{ challenge.correct_submissions|default:0 }}</td>
+                                    <td>
+                                        {% if challenge.total_submissions > 0 %}
+                                        <div class="progress" style="height: 20px;">
+                                            <div class="progress-bar" role="progressbar" style="width: {{ challenge.success_rate|default:0 }}%">
+                                                {{ challenge.success_rate|default:0|floatformat:1 }}%
+                                            </div>
+                                        </div>
+                                        {% else %}
+                                        -
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ challenge.completion_count|default:0 }}</td>
+                                    <td>
+                                        <a href="{% url 'logging:challenge_submissions' challenge.id %}" class="btn btn-sm btn-outline-primary">View Submissions</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
