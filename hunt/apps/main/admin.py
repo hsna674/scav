@@ -10,7 +10,6 @@ class ChallengeAdmin(admin.ModelAdmin):
     fields = (
         "name",
         "short_description",
-        "description",
         "flag",
         "points",
         "exclusive",

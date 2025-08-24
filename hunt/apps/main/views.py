@@ -72,30 +72,6 @@ def overview(request):
     return render(request, "main/overview.html", context={"data": data})
 
 
-@login_required
-def challenge_detail(request, challenge_id):
-    if request.user.is_participant() or request.user.is_staff:
-        c = get_object_or_404(Challenge, pk=challenge_id)
-        challenges_completed_by_class = set(
-            Class.objects.get(
-                year=str(request.user.graduation_year)
-            ).challenges_completed.all()
-        )
-        if not c.unblocked:
-            status = "blocked"
-        elif c in challenges_completed_by_class:
-            status = "completed"
-        elif c.locked:
-            status = "locked"
-        else:
-            status = "available"
-        return render(
-            request, "main/detail.html", context={"status": status, "challenge": c}
-        )
-    else:
-        return redirect(reverse("main:overview"))
-
-
 def is_ajax(request):
     return request.META.get("HTTP_X_REQUESTED_WITH") == "XMLHttpRequest"
 
