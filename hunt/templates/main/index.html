@@ -30,6 +30,11 @@
                     $("#box" + challenge_id + " .challenge-content").html('<div class="challenge-status-text completed">Solved!</div>');
                     // Remove the input section
                     $("#box" + challenge_id + " .challenge-input").remove();
+                    
+                    // Update decreasing cards if provided
+                    if (data.decreasing_challenges_update) {
+                        updateDecreasingChallengePoints(data.decreasing_challenges_update);
+                    }
                 } else if (data.result === "ratelimited") {
                     const alert = $("<div class='alert alert-danger alert-dismissible fade show' role='alert' style='margin-top: 10px; border-radius: 8px;'>Why don't we slow down a bit :~)</div>");
                     input.parent().append(alert);
@@ -50,6 +55,17 @@
                 submitBtn.prop('disabled', false).text('Submit');
             }
         });
+    }
+    
+    function updateDecreasingChallengePoints(challengeUpdates) {
+        // Update point displays for specific challenges that are still available
+        for (const [challengeId, newPoints] of Object.entries(challengeUpdates)) {
+            const box = $("#box" + challengeId);
+            if (box.hasClass('available')) {
+                // Update the points display
+                box.find('.challenge-points').first().text(newPoints + ' points');
+            }
+        }
     }
     
     // Set dark mode class on body
@@ -146,7 +162,12 @@
             <div id="box{{ status.0.id }}" class="challenge-box {% if status.1 == 'available' %}available{% elif status.1 == 'completed' %}completed{% else %}locked{% endif %}">
                 <div class="challenge-header">
                     <h4 class="challenge-title">{{ status.0.name }}</h4>
-                    <p class="challenge-points">{{ status.0.points }} points</p>
+                    {% if status.0.is_decreasing and status.1 == 'available' and status|length > 2 %}
+                        <p class="challenge-points">{{ status.2 }} points</p>
+                        <small class="challenge-points-note">(decreases by {{ status.0.decay_percentage }}% after each class)</small>
+                    {% else %}
+                        <p class="challenge-points">{{ status.0.points }} points</p>
+                    {% endif %}
                 </div>
                 
                 <div class="challenge-content">
@@ -154,8 +175,11 @@
                         <div class="challenge-status-text completed">Solved!</div>
                     {% elif status.1 == 'locked' %}
                         <p class="challenge-description">This challenge was exclusive and has already been completed by another class.</p>
-                    {% elif status.0.exclusive %}
+                    {% elif status.0.is_exclusive %}
                         <p class="challenge-description">This challenge's points are only available to the first class to complete it.</p>
+                        <p class="challenge-description">{{ status.0.short_description }}</p>
+                    {% elif status.0.is_decreasing %}
+                        <p class="challenge-description">This challenge's points decrease by {{ status.0.decay_percentage }}% each time a class completes it.</p>
                         <p class="challenge-description">{{ status.0.short_description }}</p>
                     {% else %}
                         <p class="challenge-description">{{ status.0.short_description }}</p>

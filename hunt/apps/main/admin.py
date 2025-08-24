@@ -12,20 +12,22 @@ class ChallengeAdmin(admin.ModelAdmin):
         "short_description",
         "flag",
         "points",
-        "exclusive",
+        "challenge_type",
+        "decay_percentage",
         "unblocked",
         "category",
     )
     list_display = (
         "name",
         "points",
-        "exclusive",
+        "challenge_type",
+        "decay_percentage",
         "unblocked",
         "locked",
         "category",
         "submissions_link",
     )
-    list_filter = ("exclusive", "unblocked", "locked", "category")
+    list_filter = ("challenge_type", "unblocked", "locked", "category")
     readonly_fields = ("locked",)
 
     def get_form(self, request, obj=None, **kwargs):
@@ -36,7 +38,16 @@ class ChallengeAdmin(admin.ModelAdmin):
             form.base_fields[
                 "unblocked"
             ].help_text = "Controls whether this challenge is available to participants"
+
+        if "decay_percentage" in form.base_fields:
+            form.base_fields[
+                "decay_percentage"
+            ].help_text = "Percentage by which points decrease for decreasing challenges (only applies to 'Decreasing' type)"
+
         return form
+
+    class Media:
+        js = ("admin/js/challenge_admin.js",)
 
     def submissions_link(self, obj):
         """Link to view submissions for this challenge"""

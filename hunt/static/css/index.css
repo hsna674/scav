@@ -159,8 +159,20 @@ body.dark-mode .challenge-title {
     transition: color 0.3s ease;
 }
 
+.challenge-points-note {
+    color: #9ca3af;
+    font-size: 0.8rem;
+    font-style: italic;
+    margin-top: 2px;
+    display: block;
+}
+
 body.dark-mode .challenge-points {
     color: #9ca3af;
+}
+
+body.dark-mode .challenge-points-note {
+    color: #6b7280;
 }
 
 /* Challenge content */

@@ -1,3 +1,5 @@
+from ..logging.models import ChallengeCompletion
+
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.http.response import JsonResponse
@@ -25,21 +27,29 @@ def index(request):
             - locked (can only be completed by one class and has been completed)
         """
         data = sorted([(c.year, c.get_points()) for c in Class.objects.all()])
-        challenges_completed_by_class = set(
-            Class.objects.get(
-                year=str(request.user.graduation_year)
-            ).challenges_completed.all()
+
+        # Determine completed challenges for the user's class via ChallengeCompletion
+
+        completed_ids = set(
+            ChallengeCompletion.objects.filter(
+                class_year=str(request.user.graduation_year)
+            ).values_list("challenge_id", flat=True)
         )
+
         categories_dict = dict()
         for category in Category.objects.all():
             challenges_dict = dict()
             for c in category.challenges.all():
-                if c in challenges_completed_by_class:
+                if c.id in completed_ids:
                     challenges_dict[c.id] = [c, "completed"]
                 elif c.locked:
                     challenges_dict[c.id] = [c, "locked"]
                 else:
-                    challenges_dict[c.id] = [c, "available"]
+                    if c.is_decreasing:
+                        current_points = c.get_current_points()
+                        challenges_dict[c.id] = [c, "available", current_points]
+                    else:
+                        challenges_dict[c.id] = [c, "available"]
             categories_dict[category.id] = [category, challenges_dict]
 
         return render(
@@ -89,9 +99,10 @@ def validate_flag(request):
         challenge = get_object_or_404(
             Challenge, id=int(request.POST.get("challenge_id"))
         )
-        flag = request.POST.get("flag")
+        flag = request.POST.get("flag", "")
 
-        is_correct = flag.lower() == challenge.flag.lower()
+        # Compare flags case-insensitively and ignore surrounding whitespace
+        is_correct = flag.strip().lower() == challenge.flag.strip().lower()
         points_awarded = 0
 
         # Log the flag submission
@@ -106,36 +117,43 @@ def validate_flag(request):
 
         if is_correct:
             if not challenge.locked:
-                # Check if user already completed this challenge
                 user_already_completed = request.user.challenges_done.filter(
                     id=challenge.id
                 ).exists()
 
                 if not user_already_completed:
-                    points_awarded = challenge.points
-
-                    # Add to user's completed challenges
-                    request.user.challenges_done.add(challenge)
-
-                    # Add to class completed challenges
                     hoco_class = Class.objects.get(
                         year=str(request.user.graduation_year)
                     )
-                    class_already_completed = hoco_class.challenges_completed.filter(
-                        id=challenge.id
-                    ).exists()
-                    first_for_class = not class_already_completed
 
+                    # Has this class already completed this challenge?
+                    class_already_has_completion = ChallengeCompletion.objects.filter(
+                        challenge=challenge,
+                        class_year=str(request.user.graduation_year),
+                    ).exists()
+                    first_for_class = not class_already_has_completion
+
+                    # Determine base points BEFORE mutating (for decreasing, based on current state)
+                    if challenge.is_decreasing:
+                        base_points = challenge.get_current_points()
+                    else:
+                        base_points = challenge.points
+
+                    # Award points only for the first solver in a class
+                    points_awarded = base_points if first_for_class else 0
+
+                    # Persist user and class completion relations
+                    request.user.challenges_done.add(challenge)
                     hoco_class.challenges_completed.add(challenge)
                     hoco_class.save()
 
-                    # If exclusive challenge, lock it
-                    if challenge.exclusive:
+                    # Lock exclusive
+                    if challenge.is_exclusive:
                         challenge.locked = True
                     challenge.save()
 
-                    # Log the completion
-                    log_challenge_completion(
+                    # Log completion (also creates the ChallengeCompletion row)
+                    completion = log_challenge_completion(
                         user=request.user,
                         challenge=challenge,
                         points_earned=points_awarded,
@@ -144,7 +162,28 @@ def validate_flag(request):
                         request=request,
                     )
 
-                    # Update the flag submission with points awarded
+                    # Fallback: ensure persistence if logger failed to create
+                    if completion is None:
+                        completion, _ = ChallengeCompletion.objects.get_or_create(
+                            user=request.user,
+                            challenge=challenge,
+                            defaults={
+                                "class_year": str(request.user.graduation_year),
+                                "points_earned": points_awarded,
+                                "first_completion_for_class": first_for_class,
+                            },
+                        )
+                        # If row existed (shouldn't for first user+challenge), update fields just in case
+                        if (
+                            completion.class_year != str(request.user.graduation_year)
+                            or completion.points_earned != points_awarded
+                            or completion.first_completion_for_class != first_for_class
+                        ):
+                            completion.class_year = str(request.user.graduation_year)
+                            completion.points_earned = points_awarded
+                            completion.first_completion_for_class = first_for_class
+                            completion.save()
+
                     from ..logging.models import FlagSubmission
 
                     FlagSubmission.objects.filter(
@@ -155,6 +194,15 @@ def validate_flag(request):
                     ).update(points_awarded=points_awarded)
 
             response = {"result": "success", "points": points_awarded}
+
+            if challenge.is_decreasing:
+                # Recompute updated display values for all decreasing challenges
+                decreasing_challenges = {}
+                for ch in Challenge.objects.filter(
+                    challenge_type="decreasing", unblocked=True
+                ):
+                    decreasing_challenges[ch.id] = ch.get_current_points()
+                response["decreasing_challenges_update"] = decreasing_challenges
         else:
             response = {"result": "failure"}
         return JsonResponse(response)

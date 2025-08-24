@@ -1,4 +1,6 @@
 from django.db import models
+from django.apps import apps
+from django.db.models import Sum
 
 
 class Category(models.Model):
@@ -11,12 +13,30 @@ class Category(models.Model):
 
 
 class Challenge(models.Model):
+    CHALLENGE_TYPE_CHOICES = [
+        ("normal", "Normal"),
+        ("exclusive", "Exclusive"),
+        ("decreasing", "Decreasing"),
+    ]
+
     id = models.AutoField(primary_key=True, null=False, blank=False)
     name = models.CharField(max_length=100, null=False, blank=False)
     short_description = models.CharField(max_length=500, null=False, blank=False)
     flag = models.CharField(max_length=1024, null=False, blank=False)
     points = models.IntegerField(null=False, blank=False)
-    exclusive = models.BooleanField(default=False)
+    challenge_type = models.CharField(
+        max_length=20,
+        choices=CHALLENGE_TYPE_CHOICES,
+        default="normal",
+        help_text="Normal: Standard challenge. Exclusive: Only one class can solve. Decreasing: Points decrease after each class solves it.",
+    )
+    exclusive = models.BooleanField(
+        default=False, help_text="Deprecated: Use challenge_type instead"
+    )
+    decay_percentage = models.IntegerField(
+        default=10,
+        help_text="Percentage by which points decrease for decreasing challenges (1-99)",
+    )
     locked = models.BooleanField(default=False)
     unblocked = models.BooleanField(default=False)
     category = models.ForeignKey(
@@ -29,6 +49,49 @@ class Challenge(models.Model):
 
     def __str__(self):
         return "{} ({})".format(self.name, self.id)
+
+    @property
+    def is_exclusive(self):
+        """Check if challenge is exclusive (backwards compatibility or new type)"""
+        return self.exclusive or self.challenge_type == "exclusive"
+
+    @property
+    def is_decreasing(self):
+        """Check if challenge has decreasing points"""
+        return self.challenge_type == "decreasing"
+
+    def _completed_classes_count(self) -> int:
+        """Return the number of distinct classes that have completed this challenge.
+        Uses ChallengeCompletion to avoid M2M timing issues.
+        Only counts the first completion for each class.
+        """
+        try:
+            ChallengeCompletion = apps.get_model("logging", "ChallengeCompletion")
+            return (
+                ChallengeCompletion.objects.filter(
+                    challenge=self, first_completion_for_class=True
+                )
+                .values("class_year")
+                .distinct()
+                .count()
+            )
+        except Exception:
+            # Fallback to M2M if logging app unavailable
+            return self.classes_completed.count()
+
+    def get_points_for_class(self, class_year):
+        """Get the points this challenge is worth for a specific class (current value)."""
+        if not self.is_decreasing:
+            return self.points
+
+        classes_completed = self._completed_classes_count()
+        decay_factor = (100 - self.decay_percentage) / 100
+        current_points = self.points * (decay_factor**classes_completed)
+        return max(1, round(current_points))
+
+    def get_current_points(self):
+        """Get the current point value for the next class to solve (same as get_points_for_class)."""
+        return self.get_points_for_class(None)
 
 
 class Class(models.Model):
@@ -53,10 +116,54 @@ class Class(models.Model):
         return self.year
 
     def get_points(self):
-        sum = 0
-        for c in self.challenges_completed.all():
-            sum += c.points
-        return sum
+        """Total points for this class computed from ChallengeCompletion records."""
+        try:
+            ChallengeCompletion = apps.get_model("logging", "ChallengeCompletion")
+            total = (
+                ChallengeCompletion.objects.filter(class_year=self.year)
+                .aggregate(Sum("points_earned"))
+                .get("points_earned__sum")
+            )
+            return int(total or 0)
+        except Exception:
+            # Fallback to legacy M2M-based sum
+            sum_ = 0
+            for c in self.challenges_completed.all():
+                if c.is_decreasing:
+                    sum_ += self.get_points_earned_for_challenge(c)
+                else:
+                    sum_ += c.points
+            return sum_
+
+    def get_points_earned_for_challenge(self, challenge):
+        """Get the points this class earned for a specific challenge"""
+        if not challenge.is_decreasing:
+            return challenge.points
+
+        try:
+            ChallengeCompletion = apps.get_model("logging", "ChallengeCompletion")
+            completions = (
+                ChallengeCompletion.objects.filter(
+                    challenge=challenge, first_completion_for_class=True
+                )
+                .order_by("timestamp")
+                .values("class_year")
+            )
+
+            seen_order = []
+            for row in completions:
+                cy = row["class_year"]
+                if cy not in seen_order:
+                    if cy == self.year:
+                        break
+                    seen_order.append(cy)
+
+            class_completion_order = len(seen_order)
+            decay_factor = (100 - challenge.decay_percentage) / 100
+            points_earned = challenge.points * (decay_factor**class_completion_order)
+            return max(1, round(points_earned))
+        except Exception:
+            return challenge.get_current_points()
 
 
 class SiteConfig(models.Model):
