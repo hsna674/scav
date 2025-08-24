@@ -196,6 +196,30 @@ body.dark-mode .challenge-description {
     color: #d1d5db;
 }
 
+/* Links within challenge descriptions */
+.challenge-description a {
+    color: #3b82f6;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    border-bottom: 1px solid transparent;
+}
+
+.challenge-description a:hover {
+    color: #1d4ed8;
+    text-decoration: none;
+    border-bottom: 1px solid #3b82f6;
+}
+
+body.dark-mode .challenge-description a {
+    color: #60a5fa;
+}
+
+body.dark-mode .challenge-description a:hover {
+    color: #93c5fd;
+    border-bottom: 1px solid #60a5fa;
+}
+
 .challenge-status-text {
     font-size: 1.1rem;
     font-weight: 600;

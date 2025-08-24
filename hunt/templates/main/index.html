@@ -1,6 +1,7 @@
 {% extends 'base_with_nav.html' %}
 
 {% load static %}
+{% load link_helpers %}
 
 {% block head %}
 <link rel='stylesheet' href="{% static 'css/index.css' %}">
@@ -176,12 +177,12 @@
                         <p class="challenge-description">This challenge was exclusive and has already been completed by another class.</p>
                     {% elif status.0.is_exclusive %}
                         <p class="challenge-description">This challenge's points are only available to the first class to complete it.</p>
-                        <p class="challenge-description">{{ status.0.short_description }}</p>
+                        <p class="challenge-description">{{ status.0.short_description|linkify }}</p>
                     {% elif status.0.is_decreasing %}
                         <p class="challenge-description">This challenge's points decrease each time a class completes it.</p>
-                        <p class="challenge-description">{{ status.0.short_description }}</p>
+                        <p class="challenge-description">{{ status.0.short_description|linkify }}</p>
                     {% else %}
-                        <p class="challenge-description">{{ status.0.short_description }}</p>
+                        <p class="challenge-description">{{ status.0.short_description|linkify }}</p>
                     {% endif %}
                 </div>
                 
