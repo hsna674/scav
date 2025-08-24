@@ -166,3 +166,168 @@ body.dark-mode .header_nav[href*="toggledark"]:hover {
         margin: 5px;
     }
 }
+
+/* Logging Pages Dark Mode Styles */
+body.dark-mode .card {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+    color: #e2e8f0 !important;
+}
+
+body.dark-mode .card-header {
+    background-color: #334155 !important;
+    border-color: #475569 !important;
+    color: #e2e8f0 !important;
+}
+
+body.dark-mode .card-body {
+    background-color: #1e293b !important;
+    color: #e2e8f0 !important;
+}
+
+body.dark-mode .table {
+    color: #e2e8f0 !important;
+    background-color: transparent !important;
+}
+
+body.dark-mode .table th {
+    border-color: #475569 !important;
+    color: #cbd5e1 !important;
+}
+
+body.dark-mode .table td {
+    border-color: #475569 !important;
+}
+
+body.dark-mode .table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(51, 65, 85, 0.3) !important;
+}
+
+body.dark-mode .btn-outline-primary {
+    color: #60a5fa;
+    border-color: #60a5fa;
+}
+
+body.dark-mode .btn-outline-primary:hover {
+    background-color: #60a5fa;
+    border-color: #60a5fa;
+    color: #1e293b;
+}
+
+body.dark-mode .btn-outline-secondary {
+    color: #cbd5e1;
+    border-color: #cbd5e1;
+}
+
+body.dark-mode .btn-outline-secondary:hover {
+    background-color: #cbd5e1;
+    border-color: #cbd5e1;
+    color: #1e293b;
+}
+
+body.dark-mode .badge-primary {
+    background-color: #3b82f6;
+}
+
+body.dark-mode .badge-secondary {
+    background-color: #6b7280;
+}
+
+body.dark-mode .badge-success {
+    background-color: #10b981;
+}
+
+body.dark-mode .badge-danger {
+    background-color: #ef4444;
+}
+
+body.dark-mode .badge-warning {
+    background-color: #f59e0b;
+}
+
+body.dark-mode .text-muted {
+    color: #9ca3af !important;
+}
+
+body.dark-mode .border-bottom {
+    border-color: #475569 !important;
+}
+
+body.dark-mode .form-control {
+    background-color: #334155;
+    border-color: #475569;
+    color: #e2e8f0;
+}
+
+body.dark-mode .form-control:focus {
+    background-color: #334155;
+    border-color: #60a5fa;
+    color: #e2e8f0;
+    box-shadow: 0 0 0 0.2rem rgba(96, 165, 250, 0.25);
+}
+
+body.dark-mode .progress {
+    background-color: #334155 !important;
+}
+
+body.dark-mode .progress-bar {
+    background-color: #3b82f6;
+    color: #ffffff !important;
+}
+
+/* Fix for progress bar percentage text visibility */
+body.dark-mode .progress-bar .small,
+body.dark-mode .progress .small {
+    color: #1e293b !important;
+    font-weight: 600;
+}
+
+body.dark-mode .pagination .page-link {
+    background-color: #334155;
+    border-color: #475569;
+    color: #e2e8f0;
+}
+
+body.dark-mode .pagination .page-link:hover {
+    background-color: #475569;
+    border-color: #60a5fa;
+    color: #e2e8f0;
+}
+
+body.dark-mode .pagination .page-item.active .page-link {
+    background-color: #3b82f6;
+    border-color: #3b82f6;
+    color: #ffffff;
+}
+
+/* Additional Bootstrap overrides for dark mode */
+body.dark-mode .bg-info {
+    background-color: #0ea5e9 !important;
+}
+
+body.dark-mode .bg-success {
+    background-color: #10b981 !important;
+}
+
+body.dark-mode .bg-warning {
+    background-color: #f59e0b !important;
+}
+
+body.dark-mode .bg-primary {
+    background-color: #3b82f6 !important;
+}
+
+body.dark-mode .text-white {
+    color: #ffffff !important;
+}
+
+body.dark-mode .list-group-item {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+    color: #e2e8f0 !important;
+}
+
+body.dark-mode .list-group-flush .list-group-item {
+    border-left: 0 !important;
+    border-right: 0 !important;
+}

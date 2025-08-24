@@ -72,6 +72,7 @@ def activity_dashboard(request):
         "class_stats": class_stats,
         "hours": hours,
         "since": since,
+        "dark_mode": request.user.dark_mode,
     }
 
     return render(request, "logging/dashboard.html", context)
@@ -121,6 +122,7 @@ def flag_submissions(request):
             "correct": is_correct,
             "class": class_year,
         },
+        "dark_mode": request.user.dark_mode,
     }
 
     return render(request, "logging/flag_submissions.html", context)
@@ -176,6 +178,7 @@ def challenge_submissions(request, challenge_id):
         "page_obj": page_obj,
         "stats": stats,
         "class_stats": class_stats,
+        "dark_mode": request.user.dark_mode,
     }
 
     return render(request, "logging/challenge_submissions.html", context)
@@ -223,6 +226,7 @@ def user_activity(request, user_id):
         "flag_submissions": flag_submissions[:20],  # Show recent 20
         "completions": completions[:20],  # Show recent 20
         "stats": stats,
+        "dark_mode": request.user.dark_mode,
     }
 
     return render(request, "logging/user_activity.html", context)
@@ -293,6 +297,7 @@ def class_leaderboard(request):
         "challenge_stats": challenge_stats,
         "days": days,
         "since": since,
+        "dark_mode": request.user.dark_mode,
     }
 
     return render(request, "logging/class_leaderboard.html", context)

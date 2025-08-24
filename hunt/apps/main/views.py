@@ -60,7 +60,10 @@ def dark_mode(request):
     user = request.user
     user.dark_mode = not user.dark_mode
     user.save()
-    return redirect(reverse("main:index"))
+
+    # Redirect back to the referring page, or main index as fallback
+    next_url = request.META.get("HTTP_REFERER", reverse("main:index"))
+    return redirect(next_url)
 
 
 @login_required
