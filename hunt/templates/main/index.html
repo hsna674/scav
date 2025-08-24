@@ -164,7 +164,6 @@
                     <h4 class="challenge-title">{{ status.0.name }}</h4>
                     {% if status.0.is_decreasing and status.1 == 'available' and status|length > 2 %}
                         <p class="challenge-points">{{ status.2 }} points</p>
-                        <small class="challenge-points-note">(decreases by {{ status.0.decay_percentage }}% after each class)</small>
                     {% else %}
                         <p class="challenge-points">{{ status.0.points }} points</p>
                     {% endif %}
@@ -179,7 +178,7 @@
                         <p class="challenge-description">This challenge's points are only available to the first class to complete it.</p>
                         <p class="challenge-description">{{ status.0.short_description }}</p>
                     {% elif status.0.is_decreasing %}
-                        <p class="challenge-description">This challenge's points decrease by {{ status.0.decay_percentage }}% each time a class completes it.</p>
+                        <p class="challenge-description">This challenge's points decrease each time a class completes it.</p>
                         <p class="challenge-description">{{ status.0.short_description }}</p>
                     {% else %}
                         <p class="challenge-description">{{ status.0.short_description }}</p>
