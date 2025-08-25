@@ -107,6 +107,23 @@
         });
     }
 </script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll(".challenge-box").forEach(function (box) {
+        box.addEventListener("click", function (e) {
+            const adminUrl = this.getAttribute("data-admin-url");
+            if (!adminUrl) return; // Only do this for admins
+
+            // Don’t trigger if user clicked inside input or button
+            if (e.target.closest("input") || e.target.closest("button") || e.target.closest("a")) {
+                return;
+            }
+
+            window.location.href = adminUrl;
+        });
+    });
+});
+</script>
 {% endblock %}
 
 {% block main %}
@@ -160,7 +177,13 @@
         <div id="c-{{ category.id }}" class="challenges-grid">
             {% for challenge, status in challenges.items %}
             {% if status.0.unblocked %}
-            <div id="box{{ status.0.id }}" class="challenge-box {% if status.1 == 'available' %}available{% elif status.1 == 'completed' %}completed{% else %}locked{% endif %}">
+            <div id="box{{ status.0.id }}" class="challenge-box {% if status.1 == 'available' %}available{% elif status.1 == 'completed' %}completed{% else %}locked{% endif %}{% if request.user.is_staff %} admin-clickable{% endif %}"
+                {% if request.user.is_staff %}
+                    data-admin-url="{% url 'admin:main_challenge_change' status.0.id %}"
+                    style="cursor: pointer;" 
+                    onmouseover="this.style.boxShadow='0 0 10px rgba(0,0,0,0.2)'; this.style.borderColor='#3498db';"
+                    onmouseout="this.style.boxShadow=''; this.style.borderColor='';"
+                {% endif %}>
                 <div class="challenge-header">
                     <h4 class="challenge-title">{{ status.0.name }}</h4>
                     {% if status.0.is_decreasing and status.1 == 'available' and status|length > 2 %}
@@ -194,7 +217,13 @@
                 {% endif %}
             </div>
             {% else %}
-            <div id="box{{ status.0.id }}" class="challenge-box locked">
+            <div id="box{{ status.0.id }}" class="challenge-box locked{% if request.user.is_staff %} admin-clickable{% endif %}"
+                {% if request.user.is_staff %}
+                    data-admin-url="{% url 'admin:main_challenge_change' status.0.id %}"
+                    style="cursor: pointer;" 
+                    onmouseover="this.style.boxShadow='0 0 10px rgba(0,0,0,0.2)'; this.style.borderColor='#3498db';"
+                    onmouseout="this.style.boxShadow=''; this.style.borderColor='';"
+                {% endif %}>
                 <div class="challenge-header">
                     <h4 class="challenge-title">{{ status.0.name }}</h4>
                     <p class="challenge-points">{{ status.0.points }} points</p>
