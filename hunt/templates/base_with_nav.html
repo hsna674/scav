@@ -10,9 +10,13 @@
     </div>
     <div class="col-lg-2 col-md-1"></div>
     <div class="col-lg-5 col-md-5 col-sm-12 col-xs-12 nav_section">
-      <a class="header_nav" href="{% url 'main:toggledark' %}" style="text-decoration: none; padding: 8px 16px; border-radius: 8px; transition: all 0.3s ease; margin-right: 10px; margin-top: 8px;">
+      <a class="header_nav" href="{% url 'main:toggledark' %}" style="text-decoration: none; padding: 11px 16px 8px 16px; border-radius: 8px; transition: all 0.3s ease; margin-right: 10px; margin-top: 8px;">
         <i class="fas fa-moon"></i>
-        Dark Mode
+        {% if dark_mode %}
+          Light Mode
+        {% else %}
+          Dark Mode
+        {% endif %}
       </a>
       <div class="dropdown header_nav">
         <button class="btn dropdown-toggle dropdown-btn" data-toggle="dropdown">
