@@ -180,6 +180,7 @@ document.addEventListener("DOMContentLoaded", function () {
             <div id="box{{ status.0.id }}" class="challenge-box {% if status.1 == 'available' %}available{% elif status.1 == 'completed' %}completed{% else %}locked{% endif %}{% if request.user.is_staff %} admin-clickable{% endif %}"
                 {% if request.user.is_staff %}
                     data-admin-url="{% url 'admin:main_challenge_change' status.0.id %}"
+                    title="Edit this challenge"
                     style="cursor: pointer;" 
                     onmouseover="this.style.boxShadow='0 0 10px rgba(0,0,0,0.2)'; this.style.borderColor='#3498db';"
                     onmouseout="this.style.boxShadow=''; this.style.borderColor='';"
@@ -220,6 +221,7 @@ document.addEventListener("DOMContentLoaded", function () {
             <div id="box{{ status.0.id }}" class="challenge-box locked{% if request.user.is_staff %} admin-clickable{% endif %}"
                 {% if request.user.is_staff %}
                     data-admin-url="{% url 'admin:main_challenge_change' status.0.id %}"
+                    title="Edit this challenge"
                     style="cursor: pointer;" 
                     onmouseover="this.style.boxShadow='0 0 10px rgba(0,0,0,0.2)'; this.style.borderColor='#3498db';"
                     onmouseout="this.style.boxShadow=''; this.style.borderColor='';"
