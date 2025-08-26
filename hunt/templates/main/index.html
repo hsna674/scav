@@ -204,6 +204,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         <p class="challenge-description">{{ status.0.short_description|linkify }}</p>
                         <div class="challenge-status-text completed">Solved!</div>
                     {% elif status.1 == 'locked' %}
+                        <p class="challenge-description">{{ status.0.short_description|linkify }}</p>
                         <p class="challenge-description">This challenge was exclusive and has already been completed by another class.</p>
                     {% elif status.0.is_exclusive %}
                         <p class="challenge-description">This challenge's points are only available to the first class to complete it.</p>
