@@ -42,11 +42,18 @@
                         updateDecreasingChallengePoints(data.decreasing_challenges_update);
                     }
                 } else if (data.result === "ratelimited") {
-                    const alert = $("<div class='alert alert-danger alert-dismissible fade show' role='alert' style='margin-top: 10px; border-radius: 8px;'>Why don't we slow down a bit :~)</div>");
+                    const alert = $("<div style='margin-top:8px; padding:6px 10px; border:1px solid #ccc; border-radius:4px; font-size:14px; color:#333; background:#f9f9f9; opacity:0; transition:opacity 0.4s;'>Too many attempts. Please slow down.</div>");
                     input.parent().append(alert);
-                    setTimeout(function () {
-                        alert.alert('close');
-                    }, 3000);
+
+                    requestAnimationFrame(() => {
+                        alert.css("opacity", "1");
+                    });
+
+                    setTimeout(() => {
+                        alert.css("opacity", "0");
+                        setTimeout(() => alert.remove(), 400);
+                    }, 2500);
+
                     submitBtn.prop('disabled', false).text('Submit');
                 } else {
                     document.getElementById("lose").play();
