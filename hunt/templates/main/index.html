@@ -27,8 +27,13 @@
             success: function (data) {
                 if (data.result == "success") {
                     $("#box" + challenge_id).removeClass("available").addClass("completed");
-                    // Update content to show "Solved!" regardless of whether it's exclusive
-                    $("#box" + challenge_id + " .challenge-content").html('<div class="challenge-status-text completed">Solved!</div>');
+                    // Get the original description from the challenge box
+                    const originalDescription = $("#box" + challenge_id + " .challenge-description").last().html();
+                    // Update content to show "Solved!" and the description
+                    $("#box" + challenge_id + " .challenge-content").html(
+                        '<p class="challenge-description">' + originalDescription + '</p>' +
+                        '<div class="challenge-status-text completed">Solved!</div>'
+                    );
                     // Remove the input section
                     $("#box" + challenge_id + " .challenge-input").remove();
                     
@@ -196,6 +201,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 
                 <div class="challenge-content">
                     {% if status.1 == 'completed' %}
+                        <p class="challenge-description">{{ status.0.short_description|linkify }}</p>
                         <div class="challenge-status-text completed">Solved!</div>
                     {% elif status.1 == 'locked' %}
                         <p class="challenge-description">This challenge was exclusive and has already been completed by another class.</p>
