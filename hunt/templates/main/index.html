@@ -26,7 +26,11 @@
             },
             success: function (data) {
                 if (data.result == "success") {
-                    $("#box" + challenge_id).removeClass("available").addClass("completed");
+                    const box = $("#box" + challenge_id);
+                    box.removeClass("available").addClass("completed flash-green");
+
+                    // Remove the animation class after it finishes so it can be re-triggered if needed
+                    setTimeout(() => box.removeClass("flash-green"), 1200);
                     // Get the original description from the challenge box
                     const originalDescription = $("#box" + challenge_id + " .challenge-description").last().html();
                     // Update content to show "Solved!" and the description
@@ -136,6 +140,17 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 });
 </script>
+<style>
+@keyframes flashGreen {
+  0%   { background-color: #34d399; }
+  100% { background-color: inherit; }
+}
+
+.flash-green {
+  animation: flashGreen 1.2s ease-in-out;
+}
+
+</style>
 {% endblock %}
 
 {% block main %}
