@@ -194,7 +194,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 </a>
                 {% endif %}
                 <button class="toggle-btn" 
-                    onclick="document.getElementById('c-{{ category.id }}').style.display = document.getElementById('c-{{ category.id }}').style.display === 'none' ? 'grid' : 'none'">
+                    onclick="document.getElementById('c-{{ category.id }}').classList.toggle('hidden')">
                     Toggle
                 </button>
             </div>

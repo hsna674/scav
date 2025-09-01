@@ -124,6 +124,19 @@ body.dark-mode .category-description {
     box-shadow: 0 6px 20px rgba(79, 70, 229, 0.35);
 }
 
+.challenges-grid {
+    overflow: hidden;
+    max-height: 2000px;
+    transition: max-height 0.5s ease, opacity 0.5s ease;
+    opacity: 1;
+}
+
+/* Hidden state */
+.challenges-grid.hidden {
+    max-height: 0;
+    opacity: 0;
+}
+
 /* Challenge grid */
 .challenges-grid {
     display: grid;
