@@ -191,10 +191,23 @@ document.addEventListener("DOMContentLoaded", function () {
     <div class="category-section">
         <div class="category-header">
             <h2 class="category-title">{{ category.name }}</h2>
-            <button class="toggle-btn" 
-                onclick="document.getElementById('c-{{ category.id }}').style.display = document.getElementById('c-{{ category.id }}').style.display === 'none' ? 'grid' : 'none'">
-                Toggle
-            </button>
+            <div class="category-actions">
+                {% if request.user.is_staff %}
+                <a href="/admin/main/challenge/add/?category={{ category.id }}" 
+                   class="add-challenge-btn" 
+                   title="Add new challenge to {{ category.name }}" 
+                   target="_blank">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                    </svg>
+                    Add Challenge
+                </a>
+                {% endif %}
+                <button class="toggle-btn" 
+                    onclick="document.getElementById('c-{{ category.id }}').style.display = document.getElementById('c-{{ category.id }}').style.display === 'none' ? 'grid' : 'none'">
+                    Toggle
+                </button>
+            </div>
         </div>
         
         {% if category.description %}

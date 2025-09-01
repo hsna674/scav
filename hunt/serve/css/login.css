@@ -1,4 +1,3 @@
-/* Modern & Professional Login Page Styles */
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
@@ -7,7 +6,6 @@ body {
     background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
 }
 
-/* Container & Background */
 .login-container {
     min-height: 100vh;
     display: flex;
@@ -80,7 +78,6 @@ body {
     font-weight: 400;
 }
 
-/* Button */
 .btn-ion {
     display: inline-flex;
     align-items: center;
