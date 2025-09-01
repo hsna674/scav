@@ -101,6 +101,34 @@ body {
 }
 .btn-ion i { font-size: 16px; }
 
+.login-secondary {
+    margin-top: 16px;
+}
+
+.btn-discord {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: rgba(88, 101, 242, 0.1);
+    color: #5865f2;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 14px;
+    border: 1px solid rgba(88, 101, 242, 0.2);
+    transition: all 0.3s ease;
+}
+.btn-discord:hover {
+    background: rgba(88, 101, 242, 0.15);
+    color: #5865f2;
+    text-decoration: none;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(88, 101, 242, 0.15);
+}
+.btn-discord i { font-size: 14px; }
+
 /* Animations */
 @keyframes slideIn {
     from { opacity: 0; transform: translateY(25px); }
@@ -114,6 +142,7 @@ body {
     .subtitle { font-size: 14px; }
     .logo { width: 60px; height: 60px; }
     .btn-ion { padding: 12px 24px; font-size: 14px; }
+    .btn-discord { padding: 8px 16px; font-size: 13px; }
     .circle-1, .circle-2, .circle-3 { display: none; }
 }
 
@@ -121,4 +150,5 @@ body {
     .login-card { padding: 24px 20px; }
     .title { font-size: 22px; }
     .btn-ion { width: 100%; }
+    .btn-discord { width: 100%; }
 }
