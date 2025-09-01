@@ -209,18 +209,14 @@
 // Set dark mode class on body
 $(document).ready(function() {
     {% if dark_mode %}
-    console.log('Dark mode is enabled for user');
-    document.body.classList.add('dark-mode');
-    console.log('Dark mode class added to body:', document.body.classList.contains('dark-mode'));
-    
-    // Force refresh styles for cards
-    setTimeout(function() {
-        $('.card').each(function() {
-            $(this).addClass('dark-mode-card');
-        });
-    }, 100);
-    {% else %}
-    console.log('Dark mode is disabled for user');
+        document.body.classList.add('dark-mode');
+        
+        // Force refresh styles for cards
+        setTimeout(function() {
+            $('.card').each(function() {
+                $(this).addClass('dark-mode-card');
+            });
+        }, 100);
     {% endif %}
 });
 </script>
@@ -264,16 +260,14 @@ function invalidateCompletion(completionId) {
 // Set dark mode class on body
 $(document).ready(function() {
     {% if dark_mode %}
-    console.log('Dark mode is enabled for user');
-    document.body.classList.add('dark-mode');
-    console.log('Dark mode class added to body:', document.body.classList.contains('dark-mode'));
-    
-    // Force refresh styles for cards
-    setTimeout(function() {
-        $('.card').each(function() {
-            $(this).removeClass('dark-mode').addClass('dark-mode');
-        });
-    }, 100);
+        document.body.classList.add('dark-mode');
+        
+        // Force refresh styles for cards
+        setTimeout(function() {
+            $('.card').each(function() {
+                $(this).removeClass('dark-mode').addClass('dark-mode');
+            });
+        }, 100);
     {% endif %}
 });
 </script>
