@@ -59,6 +59,7 @@ def index(request):
                 "categories": categories_dict,
                 "data": data,
                 "dark_mode": request.user.dark_mode,
+                "user_graduation_year": str(request.user.graduation_year),
             },
         )
     else:
