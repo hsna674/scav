@@ -59,11 +59,30 @@ body.dark-mode #hoco-scores > .score-box > .class {
     font-weight: 700;
     margin-bottom: 4px;
     color: #1f2937;
-    transition: color 0.3s ease;
+    transition: color 0.3s ease, transform 0.3s ease, text-shadow 0.3s ease;
+}
+
+/* Spotlight the current user's class score number */
+#hoco-scores > .score-box > .score.score-spotlight {
+    font-size: 2.6em;
+    background: linear-gradient(135deg, #4f46e5, #3b82f6);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 6px 20px rgba(59, 130, 246, 0.35);
+    transform: scale(1.1);
 }
 
 body.dark-mode #hoco-scores > .score-box > .score {
     color: #f9fafb;
+}
+
+body.dark-mode #hoco-scores > .score-box > .score.score-spotlight {
+    background: linear-gradient(135deg, #93c5fd, #60a5fa);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 6px 24px rgba(147, 197, 253, 0.45);
 }
 
 /* Ribbon styles */
@@ -130,6 +149,11 @@ body.dark-mode #hoco-scores > .score-box > .score {
         font-size: 1.8em;
     }
     
+    /* Keep spotlight bigger on mobile too */
+    #hoco-scores > .score-box > .score.score-spotlight {
+        font-size: 2.2em;
+    }
+    
     #hoco-scores > .score-box > .corner-ribbon {
         width: 85px;
         left: -27px;
@@ -161,6 +185,10 @@ body.dark-mode #hoco-scores > .score-box > .score {
     
     #hoco-scores > .score-box > .score {
         font-size: 1.6em;
+    }
+    
+    #hoco-scores > .score-box > .score.score-spotlight {
+        font-size: 2em;
     }
     
     #hoco-scores > .score-box > .corner-ribbon {

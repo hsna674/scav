@@ -147,28 +147,28 @@ document.addEventListener("DOMContentLoaded", function () {
 <div class="challenge-container">
     <!-- Leaderboard -->
     <div id="hoco-scores">
-        <div class="score-box {% if user_graduation_year == data.0.0 %}user-class-highlight{% endif %}">
+        <div class="score-box">
             <div class="class">{{ data.0.0 }}</div>
             <div class="corner-ribbon"></div>
-            <div class="score" id="score-senior">{{ data.0.1 }}</div>
+            <div class="score {% if user_graduation_year == data.0.0 %}score-spotlight{% endif %}" id="score-senior">{{ data.0.1 }}</div>
             points
         </div>
-        <div class="score-box {% if user_graduation_year == data.1.0 %}user-class-highlight{% endif %}">
+        <div class="score-box">
             <div class="class">{{ data.1.0 }}</div>
             <div class="corner-ribbon"></div>
-            <div class="score" id="score-junior">{{ data.1.1 }}</div>
+            <div class="score {% if user_graduation_year == data.1.0 %}score-spotlight{% endif %}" id="score-junior">{{ data.1.1 }}</div>
             points
         </div>
-        <div class="score-box {% if user_graduation_year == data.2.0 %}user-class-highlight{% endif %}">
+        <div class="score-box">
             <div class="class">{{ data.2.0 }}</div>
             <div class="corner-ribbon"></div>
-            <div class="score" id="score-sophomore">{{ data.2.1 }}</div>
+            <div class="score {% if user_graduation_year == data.2.0 %}score-spotlight{% endif %}" id="score-sophomore">{{ data.2.1 }}</div>
             points
         </div>
-        <div class="score-box {% if user_graduation_year == data.3.0 %}user-class-highlight{% endif %}">
+        <div class="score-box">
             <div class="class">{{ data.3.0 }}</div>
             <div class="corner-ribbon"></div>
-            <div class="score" id="score-freshman">{{ data.3.1 }}</div>
+            <div class="score {% if user_graduation_year == data.3.0 %}score-spotlight{% endif %}" id="score-freshman">{{ data.3.1 }}</div>
             points
         </div>
     </div>
