@@ -112,7 +112,7 @@
                                     <td>{{ challenge.correct_submissions|default:0 }}</td>
                                     <td>
                                         {% if challenge.total_submissions > 0 %}
-                                        <div class="progress" style="height: 20px;">
+                                        <div class="progress progress-fixed-height">
                                             <div class="progress-bar" role="progressbar" style="width: {{ challenge.success_rate|default:0 }}%">
                                                 {{ challenge.success_rate|default:0|floatformat:1 }}%
                                             </div>
@@ -156,64 +156,5 @@ $(document).ready(function() {
 });
 </script>
 
-<style>
-/* Inline dark mode styles to ensure they override Bootstrap */
-{% if dark_mode %}
-.card {
-    background-color: #1e293b !important;
-    border-color: #334155 !important;
-    color: #e2e8f0 !important;
-}
 
-.card-header {
-    background-color: #334155 !important;
-    border-color: #475569 !important;
-    color: #e2e8f0 !important;
-}
-
-.card-body {
-    background-color: #1e293b !important;
-    color: #e2e8f0 !important;
-}
-
-.table {
-    color: #e2e8f0 !important;
-}
-
-.table th, .table td {
-    border-color: #475569 !important;
-}
-
-.text-muted {
-    color: #9ca3af !important;
-}
-
-/* Progress bar text fix for dark mode */
-.progress {
-    background-color: #334155 !important;
-}
-
-.progress-bar {
-    background-color: #3b82f6 !important;
-}
-
-.progress .small {
-    color: #1e293b !important;
-    font-weight: 600;
-    text-shadow: none;
-}
-
-/* List group items for dark mode */
-.list-group-item {
-    background-color: #1e293b !important;
-    border-color: #334155 !important;
-    color: #e2e8f0 !important;
-}
-
-.list-group-flush .list-group-item {
-    border-left: 0 !important;
-    border-right: 0 !important;
-}
-{% endif %}
-</style>
 {% endblock %}

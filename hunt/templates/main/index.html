@@ -46,7 +46,7 @@
                         updateDecreasingChallengePoints(data.decreasing_challenges_update);
                     }
                 } else if (data.result === "ratelimited") {
-                    const alert = $("<div style='margin-top:8px; padding:6px 10px; border:1px solid #ccc; border-radius:4px; font-size:14px; color:#333; background:#f9f9f9; opacity:0; transition:opacity 0.4s;'>Too many attempts. Please slow down.</div>");
+                    const alert = $("<div class='rate-limit-alert'>Too many attempts. Please slow down.</div>");
                     input.parent().append(alert);
 
                     requestAnimationFrame(() => {
@@ -140,17 +140,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 });
 </script>
-<style>
-@keyframes flashGreen {
-  0%   { background-color: #34d399; }
-  100% { background-color: inherit; }
-}
 
-.flash-green {
-  animation: flashGreen 1.2s ease-in-out;
-}
-
-</style>
 {% endblock %}
 
 {% block main %}
@@ -221,9 +211,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 {% if request.user.is_staff %}
                     data-admin-url="{% url 'admin:main_challenge_change' status.0.id %}"
                     title="Edit this challenge"
-                    style="cursor: pointer;" 
-                    onmouseover="this.style.boxShadow='0 0 10px rgba(0,0,0,0.2)'; this.style.borderColor='#3498db';"
-                    onmouseout="this.style.boxShadow=''; this.style.borderColor='';"
                 {% endif %}>
                 <div class="challenge-header">
                     <h4 class="challenge-title">{{ status.0.name }}</h4>
@@ -264,9 +251,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 {% if request.user.is_staff %}
                     data-admin-url="{% url 'admin:main_challenge_change' status.0.id %}"
                     title="Edit this challenge"
-                    style="cursor: pointer;" 
-                    onmouseover="this.style.boxShadow='0 0 10px rgba(0,0,0,0.2)'; this.style.borderColor='#3498db';"
-                    onmouseout="this.style.boxShadow=''; this.style.borderColor='';"
                 {% endif %}>
                 <div class="challenge-header">
                     <h4 class="challenge-title">{{ status.0.name }}</h4>

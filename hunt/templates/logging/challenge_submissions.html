@@ -211,54 +211,7 @@ $(document).ready(function() {
 });
 </script>
 
-<style>
-/* Inline dark mode styles to ensure they override Bootstrap */
-{% if dark_mode %}
-.card {
-    background-color: #1e293b !important;
-    border-color: #334155 !important;
-    color: #e2e8f0 !important;
-}
 
-.card-header {
-    background-color: #334155 !important;
-    border-color: #475569 !important;
-    color: #e2e8f0 !important;
-}
-
-.card-body {
-    background-color: #1e293b !important;
-    color: #e2e8f0 !important;
-}
-
-.table {
-    color: #e2e8f0 !important;
-}
-
-.table th, .table td {
-    border-color: #475569 !important;
-}
-
-.text-muted {
-    color: #9ca3af !important;
-}
-
-/* Progress bar text fix for dark mode */
-.progress {
-    background-color: #334155 !important;
-}
-
-.progress-bar {
-    background-color: #3b82f6 !important;
-}
-
-.progress .small {
-    color: #1e293b !important;
-    font-weight: 600;
-    text-shadow: none;
-}
-{% endif %}
-</style>
 
 <script>
 function invalidateSubmission(submissionId) {

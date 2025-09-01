@@ -361,6 +361,16 @@ body.dark-mode .flag-input:focus {
     }
 }
 
+/* Flash animation for successful challenge completion */
+@keyframes flashGreen {
+    0% { background-color: #34d399; }
+    100% { background-color: inherit; }
+}
+
+.flash-green {
+    animation: flashGreen 1.2s ease-in-out;
+}
+
 /* Error state for inputs */
 .flag-input.error {
     background-color: #fee2e2 !important;
@@ -376,6 +386,30 @@ body.dark-mode .flag-input.error {
     0%, 100% { transform: translateX(0); }
     25% { transform: translateX(-5px); }
     75% { transform: translateX(5px); }
+}
+
+/* Admin clickable challenge boxes */
+.admin-clickable {
+    cursor: pointer !important;
+    transition: box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.admin-clickable:hover {
+    box-shadow: 0 0 10px rgba(0,0,0,0.2) !important;
+    border-color: #3498db !important;
+}
+
+/* Rate limit alert styling for JavaScript-generated alerts */
+.rate-limit-alert {
+    margin-top: 8px;
+    padding: 6px 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+    color: #333;
+    background: #f9f9f9;
+    opacity: 0;
+    transition: opacity 0.4s ease;
 }
 
 /* Responsive design */
