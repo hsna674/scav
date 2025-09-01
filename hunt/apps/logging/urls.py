@@ -24,4 +24,5 @@ urlpatterns = [
         views.invalidate_completion,
         name="invalidate_completion",
     ),
+    path("switch-class/", views.switch_user_class, name="switch_user_class"),
 ]

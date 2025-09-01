@@ -11,14 +11,37 @@
         </div>
     </div>
 
-    <!-- Time Filter -->
-    <div class="row mb-4">
+    {% if switched %}
+    <div class="row">
         <div class="col-12">
-            <div class="btn-group" role="group">
-                <a href="?hours=1" class="btn {% if hours == 1 %}btn-primary{% else %}btn-outline-primary{% endif %}">Last Hour</a>
-                <a href="?hours=24" class="btn {% if hours == 24 %}btn-primary{% else %}btn-outline-primary{% endif %}">Last 24 Hours</a>
-                <a href="?hours=168" class="btn {% if hours == 168 %}btn-primary{% else %}btn-outline-primary{% endif %}">Last Week</a>
+            <div class="alert alert-info py-2 my-2">
+                Now acting as class {{ switched_to }}. To revert, choose your original class from the selector.
             </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Time Filter + Act As Class -->
+    <div class="row mb-4">
+        <div class="col-12 d-flex align-items-center justify-content-between flex-wrap">
+            <div class="mb-2 mb-sm-0">
+                <div class="btn-group" role="group">
+                    <a href="?hours=1" class="btn {% if hours == 1 %}btn-primary{% else %}btn-outline-primary{% endif %}">Last Hour</a>
+                    <a href="?hours=24" class="btn {% if hours == 24 %}btn-primary{% else %}btn-outline-primary{% endif %}">Last 24 Hours</a>
+                    <a href="?hours=168" class="btn {% if hours == 168 %}btn-primary{% else %}btn-outline-primary{% endif %}">Last Week</a>
+                </div>
+            </div>
+
+            <form method="post" action="{% url 'logging:switch_user_class' %}" class="form-inline ml-sm-auto">
+                {% csrf_token %}
+                <label for="actAsClass" class="mr-2 mb-0 small text-muted">Act as class</label>
+                <select id="actAsClass" name="year" class="custom-select custom-select-sm mr-2">
+                    {% for cls in classes %}
+                        <option value="{{ cls.year }}" {% if user.graduation_year|stringformat:"s" == cls.year %}selected{% endif %}>{{ cls.get_year_display }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn btn-sm btn-outline-secondary">Switch</button>
+            </form>
         </div>
     </div>
 

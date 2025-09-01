@@ -1,10 +1,11 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
 from django.db.models import Count, Q, Sum
 from django.utils import timezone
 from datetime import timedelta
 from django.core.paginator import Paginator
 from django.contrib.auth import get_user_model
+from django.urls import reverse
 
 from .models import ActivityLog, FlagSubmission, ChallengeCompletion, ActivityType
 from .decorators import staff_or_committee_required
@@ -78,6 +79,11 @@ def activity_dashboard(request):
         "hours": hours,
         "since": since,
         "dark_mode": request.user.dark_mode,
+        # Provide classes for the switcher UI
+        "classes": Class.objects.all().order_by("year"),
+        # Show a small confirmation after switching
+        "switched": request.GET.get("switched") == "1",
+        "switched_to": request.GET.get("to"),
     }
 
     return render(request, "logging/dashboard.html", context)
@@ -485,3 +491,45 @@ def invalidate_completion(request, completion_id):
         return JsonResponse({"error": "Completion not found"}, status=404)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
+
+
+@staff_or_committee_required
+def switch_user_class(request):
+    """Allow committee/staff to change their own class (graduation_year).
+
+    This updates the user's graduation_year to the selected class year so the site
+    reflects that class's perspective.
+    """
+    if request.method != "POST":
+        return redirect("logging:dashboard")
+
+    year = request.POST.get("year")
+    if not year:
+        return redirect("logging:dashboard")
+
+    try:
+        cls = Class.objects.get(year=str(year))
+    except Class.DoesNotExist:
+        return redirect("logging:dashboard")
+
+    old_year = request.user.graduation_year
+    try:
+        new_year_int = int(cls.year)
+    except (TypeError, ValueError):
+        return redirect("logging:dashboard")
+
+    # Persist the change
+    request.user.graduation_year = new_year_int
+    request.user.save(update_fields=["graduation_year"])
+
+    # Log the action
+    log_admin_action(
+        user=request.user,
+        action="switch_user_class",
+        details={"from_year": old_year, "to_year": new_year_int},
+        request=request,
+    )
+
+    # Redirect back to dashboard with a small flag
+    dashboard_url = f"{reverse('logging:dashboard')}?switched=1&to={new_year_int}"
+    return redirect(dashboard_url)
