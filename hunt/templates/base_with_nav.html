@@ -10,15 +10,20 @@
     </div>
     <div class="col-lg-2 col-md-1"></div>
     <div class="col-lg-5 col-md-5 col-sm-12 col-xs-12 nav_section">
-      <a class="header_nav header-dark-mode-toggle" href="{% url 'main:toggledark' %}">
-        {% if dark_mode %}
-          <i class="fas fa-sun"></i>
-          Light Mode
-        {% else %}
-          <i class="fas fa-moon"></i>
-          Dark Mode
-        {% endif %}
-      </a>
+      <!-- Dark mode POST form to avoid CSRF/open redirect issues -->
+      <form action="{% url 'main:toggledark' %}" method="post" style="display:inline;">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.get_full_path|default:request.path }}" />
+        <button type="submit" class="header_nav header-dark-mode-toggle" style="background:none;border:none;cursor:pointer;">
+          {% if dark_mode %}
+            <i class="fas fa-sun"></i>
+            Light Mode
+          {% else %}
+            <i class="fas fa-moon"></i>
+            Dark Mode
+          {% endif %}
+        </button>
+      </form>
       <div class="dropdown header_nav">
         <button class="btn dropdown-toggle dropdown-btn" data-toggle="dropdown">
           <i class="fas fa-user"></i>
@@ -29,15 +34,15 @@
           <li><h3 class="drop-item">{{ user.username }}</h3></li>
           {% if user.is_participant %}
           <li>
-            <a class="drop-item" href="{% url 'main:index' %}"
-              ><h3 class="drop-item">Challenges</h3></a
-            >
+            <a class="drop-item" href="{% url 'main:index' %}">
+              <h3 class="drop-item">Challenges</h3>
+            </a>
           </li>
           {% endif %}
           <li>
-            <a class="drop-item" href="{% url 'main:support' %}"
-              ><h3 class="drop-item">Support</h3></a
-            >
+            <a class="drop-item" href="{% url 'main:support' %}">
+              <h3 class="drop-item">Support</h3>
+            </a>
           </li>
           {% if user.is_staff or user.is_committee %}
           <li>
@@ -54,20 +59,20 @@
           </li>
           {% endif %}
           <li>
-            <a class="drop-item" href="https://discord.gg/rFtJ7TMXdN" target="_blank"
-              ><h3 class="drop-item">Discord <i class="fa-brands fa-discord"></i></h3></a
-            >
+            <a class="drop-item" href="https://discord.gg/rFtJ7TMXdN" target="_blank">
+              <h3 class="drop-item">Discord <i class="fa-brands fa-discord"></i></h3>
+            </a>
           </li>
           <li>
-            <a class="drop-item" href="{% url 'auth:logout' %}" 
-              ><h3 class="drop-item">Logout</h3></a
-            >
+            <a class="drop-item" href="{% url 'auth:logout' %}">
+              <h3 class="drop-item">Logout</h3>
+            </a>
           </li>
           {% else %}
           <li>
-            <a class="drop-item" href="{% url 'auth:login' %}"
-              ><h3 class="drop-item">Login</h3></a
-            >
+            <a class="drop-item" href="{% url 'auth:login' %}">
+              <h3 class="drop-item">Login</h3>
+            </a>
           </li>
           {% endif %}
         </ul>

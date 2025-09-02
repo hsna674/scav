@@ -8,6 +8,9 @@ from django.urls import reverse
 from django.utils import timezone as tz
 from datetime import timedelta
 from django.conf import settings
+from django.views.decorators.http import require_POST
+from django.utils.http import url_has_allowed_host_and_scheme
+from django.shortcuts import resolve_url
 
 from .models import Challenge, Class, Category
 from ..logging.utils import log_flag_submission, log_challenge_completion
@@ -67,14 +70,23 @@ def index(request):
 
 
 @login_required
+@require_POST
 def dark_mode(request):
     user = request.user
     user.dark_mode = not user.dark_mode
-    user.save()
+    user.save(update_fields=["dark_mode"])
 
-    # Redirect back to the referring page, or main index as fallback
-    next_url = request.META.get("HTTP_REFERER", reverse("main:index"))
-    return redirect(next_url)
+    next_url = request.POST.get("next") or request.META.get("HTTP_REFERER")
+    if next_url and url_has_allowed_host_and_scheme(
+        url=next_url,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
+        redirect_to = resolve_url(next_url)
+    else:
+        redirect_to = reverse("main:index")
+
+    return redirect(redirect_to)
 
 
 @login_required
