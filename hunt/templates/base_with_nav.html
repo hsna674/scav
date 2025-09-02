@@ -31,7 +31,8 @@
         </button>
         <ul class="dropdown-menu dropdown-menu-right">
           {% if user.is_authenticated %}
-          <li><h3 class="drop-item">{{ user.username }}</h3></li>
+          <li class="drop-username"><h3>{{ user.username }}</h3></li>
+          <li class="drop-divider" role="separator"></li>
           {% if user.is_participant %}
           <li>
             <a class="drop-item" href="{% url 'main:index' %}">

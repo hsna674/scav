@@ -95,6 +95,42 @@ body.dark-mode .header_nav:hover {
     transition: color 0.3s ease;
 }
 
+/* Username at top of dropdown (non-hoverable) */
+.drop-username {
+    padding: 6px 8px 8px 8px;
+    margin: 2px 4px 6px 4px;
+    cursor: default;
+    user-select: text;
+}
+.drop-username h3 {
+    font-size: 15px;
+    font-weight: 600;
+    margin: 0;
+    color: #0f172a;
+}
+/* ensure no hover color on username */
+.drop-username:hover h3,
+.drop-username h3:hover {
+    color: #0f172a;
+}
+
+/* Divider below username */
+.drop-divider {
+    height: 1px;
+    background: linear-gradient(to right, transparent, rgba(15, 23, 42, 0.15), transparent);
+    border: 0;
+    margin: 6px 4px 8px 4px;
+    list-style: none;
+}
+
+/* Dark mode variants */
+body.dark-mode .drop-username h3 {
+    color: #e2e8f0;
+}
+body.dark-mode .drop-divider {
+    background: linear-gradient(to right, transparent, rgba(203, 213, 225, 0.25), transparent);
+}
+
 .dropdown-btn {
     color: #475569;
     transition: color 0.3s ease;
