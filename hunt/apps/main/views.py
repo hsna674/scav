@@ -102,6 +102,15 @@ def is_ajax(request):
 @login_required
 def validate_flag(request):
     if is_ajax(request) and (request.user.is_participant() or request.user.is_staff):
+        # Check if hunt is active (allow staff to always submit)
+        if not getattr(settings, "HUNT_ACTIVE", True) and not request.user.is_staff:
+            return JsonResponse(
+                {
+                    "result": "hunt_inactive",
+                    "message": "The hunt has ended and flag submissions are no longer accepted.",
+                }
+            )
+
         if tz.now() - request.user.last_submission_time < timedelta(
             seconds=settings.MIN_REQUEST_TIME
         ):

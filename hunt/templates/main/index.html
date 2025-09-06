@@ -59,6 +59,20 @@
                     }, 2500);
 
                     submitBtn.prop('disabled', false).text('Submit');
+                } else if (data.result === "hunt_inactive") {
+                    const alert = $("<div class='hunt-inactive-alert'>" + (data.message || "The hunt has ended and submissions are no longer accepted.") + "</div>");
+                    input.parent().append(alert);
+
+                    requestAnimationFrame(() => {
+                        alert.css("opacity", "1");
+                    });
+
+                    setTimeout(() => {
+                        alert.css("opacity", "0");
+                        setTimeout(() => alert.remove(), 400);
+                    }, 4000);
+
+                    submitBtn.prop('disabled', false).text('Submit');
                 } else {
                     document.getElementById("lose").play();
                     input.addClass("error");
@@ -177,6 +191,16 @@ document.addEventListener("DOMContentLoaded", function () {
     <!-- Page Title -->
     <h1 class="page-title">Homecoming Scavenger Hunt {{ HUNT_YEAR }}</h1>
 
+    <!-- Hunt Status Notice -->
+    {% if not HUNT_ACTIVE and not request.user.is_staff %}
+    <div class="hunt-status-banner">
+        <div class="hunt-status-content">
+            <h3>🏁 The Hunt Has Ended!</h3>
+            <p>Flag submissions are no longer accepted, but you can still view all challenges and final scores.</p>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Categories and Challenges -->
     {% for category, challenges in categories.values %}
     <div class="category-section">
@@ -242,8 +266,14 @@ document.addEventListener("DOMContentLoaded", function () {
                 
                 {% if status.1 == 'available' %}
                 <div class="challenge-input">
-                    <input type="text" id="{{ status.0.id }}" class="flag-input" placeholder="Enter the flag here" />
-                    <button type="button" class="submit-btn" onclick="checkFlag({{ status.0.id }})">Submit</button>
+                    {% if HUNT_ACTIVE or request.user.is_staff %}
+                        <input type="text" id="{{ status.0.id }}" class="flag-input" placeholder="Enter the flag here" />
+                        <button type="button" class="submit-btn" onclick="checkFlag({{ status.0.id }})">Submit</button>
+                    {% else %}
+                        <div class="hunt-ended-message">
+                            <p>The hunt has ended! Flag submissions are no longer accepted.</p>
+                        </div>
+                    {% endif %}
                 </div>
                 {% endif %}
             </div>

@@ -11,4 +11,5 @@ def hunt_context(request):
     """
     return {
         "HUNT_YEAR": settings.HUNT_YEAR,
+        "HUNT_ACTIVE": getattr(settings, "HUNT_ACTIVE", True),
     }

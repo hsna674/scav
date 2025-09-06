@@ -25,6 +25,41 @@ body.dark-mode .page-title {
     color: #e2e8f0;
 }
 
+/* Hunt status banner */
+.hunt-status-banner {
+    background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+    border: 2px solid #f5c6cb;
+    border-radius: 12px;
+    padding: 20px;
+    margin: 20px 0 30px 0;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.hunt-status-content h3 {
+    margin: 0 0 10px 0;
+    color: #721c24;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.hunt-status-content p {
+    margin: 0;
+    color: #721c24;
+    font-size: 1rem;
+    font-weight: 400;
+}
+
+body.dark-mode .hunt-status-banner {
+    background: linear-gradient(135deg, #2d1b1e 0%, #1a0f11 100%);
+    border-color: #6c757d;
+}
+
+body.dark-mode .hunt-status-content h3,
+body.dark-mode .hunt-status-content p {
+    color: #f8d7da;
+}
+
 /* Category sections */
 .category-section {
     margin-bottom: 40px;
@@ -416,6 +451,51 @@ body.dark-mode .flag-input.error {
     background: #f9f9f9;
     opacity: 0;
     transition: opacity 0.4s ease;
+}
+
+/* Hunt inactive alert styling */
+.hunt-inactive-alert {
+    margin-top: 8px;
+    padding: 8px 12px;
+    border: 1px solid #f39c12;
+    border-radius: 4px;
+    font-size: 14px;
+    color: #d68910;
+    background: #fef9e7;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}
+
+body.dark-mode .hunt-inactive-alert {
+    background: #2c1810;
+    color: #f39c12;
+    border-color: #d68910;
+}
+
+/* Hunt ended message styling */
+.hunt-ended-message {
+    padding: 12px;
+    text-align: center;
+    background: linear-gradient(135deg, #fef9e7 0%, #fcf3cf 100%);
+    border: 1px solid #f39c12;
+    border-radius: 8px;
+    margin-top: 8px;
+}
+
+.hunt-ended-message p {
+    margin: 0;
+    color: #d68910;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+body.dark-mode .hunt-ended-message {
+    background: linear-gradient(135deg, #2c1810 0%, #1f1508 100%);
+    border-color: #d68910;
+}
+
+body.dark-mode .hunt-ended-message p {
+    color: #f39c12;
 }
 
 /* Responsive design */

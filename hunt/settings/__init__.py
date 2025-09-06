@@ -220,5 +220,9 @@ if SECRET_KEY is None:
 # Placed after secret import intentionally so only this file controls the toggle.
 SITE_ENABLED = False
 
+# Hunt active toggle. Set to False to disable flag submissions but keep site viewable.
+# When False, users can still see challenges and scores but cannot submit flags.
+HUNT_ACTIVE = True
+
 # Hunt year - update this each year to change the year displayed throughout the site
 HUNT_YEAR = 2025
