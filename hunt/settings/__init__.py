@@ -203,6 +203,10 @@ SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SESSION_COOKIE_SECURE = False  # Set to True in production with HTTPS
 CSRF_COOKIE_SECURE = False  # Set to True in production with HTTPS
 
+# Discord First Blood Notifications - defaults (override in secret.py)
+DISCORD_WEBHOOK_URL = None
+DISCORD_NOTIFICATIONS_ENABLED = False
+
 try:
     from .secret import *  # noqa
 except ImportError:
