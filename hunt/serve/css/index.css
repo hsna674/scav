@@ -56,7 +56,6 @@ body.dark-mode .page-title {
     font-size: 0.85rem;
     font-weight: 500;
     transition: all 0.3s ease;
-    box-shadow: 0 3px 10px rgba(16, 185, 129, 0.25);
     border: none;
     cursor: pointer;
 }
@@ -65,8 +64,6 @@ body.dark-mode .page-title {
     color: white;
     text-decoration: none;
     transform: translateY(-2px);
-    box-shadow: 0 5px 16px rgba(16, 185, 129, 0.35);
-    background: linear-gradient(135deg, #059669, #047857);
 }
 
 .add-challenge-btn svg {
@@ -76,10 +73,6 @@ body.dark-mode .page-title {
 
 body.dark-mode .add-challenge-btn {
     background: linear-gradient(135deg, #065f46, #047857);
-}
-
-body.dark-mode .add-challenge-btn:hover {
-    background: linear-gradient(135deg, #047857, #064e3b);
 }
 
 .category-title {
