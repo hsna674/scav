@@ -6,3 +6,4 @@ db.sqlite3
 secret.py
 log.csv
 migrations/
+run.sh
