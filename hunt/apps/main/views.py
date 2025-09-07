@@ -13,6 +13,7 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.shortcuts import resolve_url
 
 from .models import Challenge, Class, Category
+from .context_processors import is_hunt_active
 from ..logging.utils import log_flag_submission, log_challenge_completion
 
 import logging
@@ -103,7 +104,7 @@ def is_ajax(request):
 def validate_flag(request):
     if is_ajax(request) and (request.user.is_participant() or request.user.is_staff):
         # Check if hunt is active (allow staff to always submit)
-        if not getattr(settings, "HUNT_ACTIVE", True) and not request.user.is_staff:
+        if not is_hunt_active() and not request.user.is_staff:
             return JsonResponse(
                 {
                     "result": "hunt_inactive",

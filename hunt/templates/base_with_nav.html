@@ -2,14 +2,45 @@
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 <div id="root">
   <div class="row header">
-    <div class="col-lg-5 col-md-6 col-sm-12 col-xs-12">
+    <div class="col-lg-4 col-md-5 col-sm-12 col-xs-12">
       <a href="{% url 'main:index' %}">
         <img class="header_img" src="{% static 'img/favicon.png' %}" />
         <h1 class="header_title">Hoco Hunt {{ HUNT_YEAR }}</h1>
       </a>
     </div>
-    <div class="col-lg-2 col-md-1"></div>
-    <div class="col-lg-5 col-md-5 col-sm-12 col-xs-12 nav_section">
+    <div class="col-lg-4 col-md-2 col-sm-12 col-xs-12 countdown-section">
+      {% if HUNT_END_TIME and HUNT_ACTIVE %}
+      <div id="countdown-timer" class="countdown-timer" data-end-time="{{ HUNT_END_TIME }}">
+        <div class="countdown-label">Hunt Ends In:</div>
+        <div class="countdown-display">
+          <span class="countdown-part">
+            <span class="countdown-number" id="countdown-days">00</span>
+            <span class="countdown-unit">days</span>
+          </span>
+          <span class="countdown-separator">:</span>
+          <span class="countdown-part">
+            <span class="countdown-number" id="countdown-hours">00</span>
+            <span class="countdown-unit">hrs</span>
+          </span>
+          <span class="countdown-separator">:</span>
+          <span class="countdown-part">
+            <span class="countdown-number" id="countdown-minutes">00</span>
+            <span class="countdown-unit">min</span>
+          </span>
+          <span class="countdown-separator">:</span>
+          <span class="countdown-part">
+            <span class="countdown-number" id="countdown-seconds">00</span>
+            <span class="countdown-unit">sec</span>
+          </span>
+        </div>
+      </div>
+      {% elif not HUNT_ACTIVE %}
+      <div class="countdown-timer hunt-ended">
+        <div class="countdown-label">🏁 Hunt Ended</div>
+      </div>
+      {% endif %}
+    </div>
+    <div class="col-lg-4 col-md-5 col-sm-12 col-xs-12 nav_section">
       <!-- Dark mode POST form to avoid CSRF/open redirect issues -->
       <form action="{% url 'main:toggledark' %}" method="post" style="display:inline;">
         {% csrf_token %}
@@ -90,6 +121,231 @@
     integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
     crossorigin="anonymous"
   ></script>
+  
+  <!-- Countdown Timer Script -->
+  <script>
+    function updateCountdown() {
+      const countdownElement = document.getElementById('countdown-timer');
+      if (!countdownElement) return;
+      
+      const endTimeStr = countdownElement.getAttribute('data-end-time');
+      if (!endTimeStr) return;
+      
+      // Parse the end time (format: "YYYY-MM-DD HH:MM:SS")
+      // Convert to ISO format for better parsing
+      const endTimeISO = endTimeStr.replace(' ', 'T'); 
+const endTime = new Date(endTimeISO);
+      const now = new Date();
+      
+      // Calculate time difference
+      const timeDiff = endTime - now;
+      
+      if (timeDiff <= 0) {
+        // Hunt has ended, reload page to update UI
+        location.reload();
+        return;
+      }
+      
+      // Calculate days, hours, minutes, seconds
+      const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000);
+      
+      // Update the display
+      document.getElementById('countdown-days').textContent = days.toString().padStart(2, '0');
+      document.getElementById('countdown-hours').textContent = hours.toString().padStart(2, '0');
+      document.getElementById('countdown-minutes').textContent = minutes.toString().padStart(2, '0');
+      document.getElementById('countdown-seconds').textContent = seconds.toString().padStart(2, '0');
+    }
+    
+    // Update countdown every second
+    if (document.getElementById('countdown-timer')) {
+      updateCountdown(); // Initial update
+      setInterval(updateCountdown, 1000);
+    }
+  </script>
+  
+  <!-- Countdown Timer Styles -->
+  <style>
+    /* Header alignment fixes */
+    .header {
+      display: flex;
+      align-items: center;
+      min-height: 70px;
+    }
+    
+    .header.row {
+      margin: 0;
+    }
+    
+    .header > div {
+      display: flex;
+      align-items: center;
+      padding: 0 15px;
+    }
+    
+    .header > div:first-child {
+      justify-content: flex-start;
+    }
+    
+    .header > div:last-child {
+      justify-content: flex-end;
+    }
+    
+    .header a {
+      display: flex;
+      align-items: center;
+      text-decoration: none;
+    }
+    
+    .header_img {
+      margin-right: 12px;
+    }
+    
+    .header_title {
+      margin: 0;
+      padding: 0;
+    }
+    
+    .nav_section {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+    
+    .countdown-section {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 0;
+    }
+    
+    .countdown-timer {
+      text-align: center;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    
+    .countdown-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #64748b;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .countdown-display {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+    }
+    
+    .countdown-part {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 35px;
+    }
+    
+    .countdown-number {
+      font-size: 18px;
+      font-weight: 700;
+      color: #1e293b;
+      line-height: 1;
+    }
+    
+    .countdown-unit {
+      font-size: 9px;
+      font-weight: 500;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    
+    .countdown-separator {
+      font-size: 16px;
+      font-weight: 700;
+      color: #64748b;
+      margin: 0 4px;
+      align-self: flex-start;
+      margin-top: 2px;
+    }
+    
+    .hunt-ended {
+      color: #dc2626;
+      font-weight: 600;
+    }
+    
+    /* Dark mode styles */
+    body.dark-mode .countdown-label {
+      color: #94a3b8;
+    }
+    
+    body.dark-mode .countdown-number {
+      color: #f1f5f9;
+    }
+    
+    body.dark-mode .countdown-unit {
+      color: #94a3b8;
+    }
+    
+    body.dark-mode .countdown-separator {
+      color: #94a3b8;
+    }
+    
+    body.dark-mode .hunt-ended {
+      color: #f87171;
+    }
+    
+    /* Responsive design */
+    @media (max-width: 768px) {
+      .header {
+        flex-direction: column;
+        min-height: auto;
+        padding: 15px 10px;
+      }
+      
+      .header > div {
+        width: 100%;
+        justify-content: center !important;
+        margin-bottom: 10px;
+      }
+      
+      .header > div:last-child {
+        margin-bottom: 0;
+      }
+      
+      .countdown-section {
+        order: 2;
+        margin: 10px 0;
+      }
+      
+      .nav_section {
+        order: 3;
+        justify-content: center !important;
+      }
+      
+      .countdown-number {
+        font-size: 16px;
+      }
+      
+      .countdown-unit {
+        font-size: 8px;
+      }
+      
+      .countdown-separator {
+        font-size: 14px;
+      }
+      
+      .countdown-part {
+        min-width: 30px;
+      }
+    }
+  </style>
+  
   {% block main %}{% endblock %}
 </div>
 {% endblock %}

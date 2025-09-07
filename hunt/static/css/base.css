@@ -200,7 +200,6 @@ body.dark-mode .header_nav[href*="toggledark"]:hover {
     border-radius: 8px;
     transition: all 0.3s ease;
     margin-right: 10px;
-    margin-top: 8px;
 }
 
 /* Progress bar height for challenge stats */

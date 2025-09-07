@@ -192,7 +192,7 @@ document.addEventListener("DOMContentLoaded", function () {
     <h1 class="page-title">Homecoming Scavenger Hunt {{ HUNT_YEAR }}</h1>
 
     <!-- Hunt Status Notice -->
-    {% if not HUNT_ACTIVE and not request.user.is_staff %}
+    {% if not HUNT_ACTIVE and not request.user.is_committee %}
     <div class="hunt-status-banner">
         <div class="hunt-status-content">
             <h3>🏁 The Hunt Has Ended!</h3>
@@ -266,7 +266,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 
                 {% if status.1 == 'available' %}
                 <div class="challenge-input">
-                    {% if HUNT_ACTIVE or request.user.is_staff %}
+                    {% if HUNT_ACTIVE or request.user.is_committee %}
                         <input type="text" id="{{ status.0.id }}" class="flag-input" placeholder="Enter the flag here" />
                         <button type="button" class="submit-btn" onclick="checkFlag({{ status.0.id }})">Submit</button>
                     {% else %}

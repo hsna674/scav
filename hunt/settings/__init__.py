@@ -217,12 +217,14 @@ if SECRET_KEY is None:
     raise ValueError("SECRET_KEY must be defined in secret.py")
 
 # Site enabled toggle. Set to False to put site in maintenance mode (superusers still allowed).
-# Placed after secret import intentionally so only this file controls the toggle.
 SITE_ENABLED = False
 
-# Hunt active toggle. Set to False to disable flag submissions but keep site viewable.
-# When False, users can still see challenges and scores but cannot submit flags.
-HUNT_ACTIVE = True
-
-# Hunt year - update this each year to change the year displayed throughout the site
+# Hunt configuration
 HUNT_YEAR = 2025
+
+# Hunt closing time (when submissions automatically stop)
+# Format: "YYYY-MM-DD HH:MM:SS" in EST/EDT timezone
+HUNT_END_TIME = "2025-09-26 17:00:00"
+
+# Manual hunt control - set to False to immediately disable submissions
+HUNT_MANUAL_CONTROL = True
