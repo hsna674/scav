@@ -25,7 +25,7 @@ class ActivityLoggingMiddleware(MiddlewareMixin):
         "/",
         "/challenge/",
         "/support/",
-        "/overview/",
+        # Removed deprecated /overview/ path
     ]
 
     def process_request(self, request):

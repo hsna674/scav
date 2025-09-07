@@ -67,7 +67,8 @@ def index(request):
             },
         )
     else:
-        return redirect(reverse("main:overview"))
+        # Fallback: if user is authenticated but not participant/staff, still show index (or redirect to login)
+        return redirect(reverse("auth:login"))
 
 
 @login_required
@@ -88,12 +89,6 @@ def dark_mode(request):
         redirect_to = reverse("main:index")
 
     return redirect(redirect_to)
-
-
-@login_required
-def overview(request):
-    data = sorted([(c.year, c.get_points()) for c in Class.objects.all()])
-    return render(request, "main/overview.html", context={"data": data})
 
 
 def is_ajax(request):
