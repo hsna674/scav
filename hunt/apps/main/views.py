@@ -124,7 +124,7 @@ def validate_flag(request):
         points_awarded = 0
 
         # Log the flag submission
-        log_flag_submission(
+        submission, activity_log = log_flag_submission(
             user=request.user,
             challenge=challenge,
             submitted_flag=flag,
@@ -159,6 +159,14 @@ def validate_flag(request):
 
                     # Award points only for the first solver in a class
                     points_awarded = base_points if first_for_class else 0
+
+                    # Update the flag submission with correct points
+                    if submission:
+                        submission.points_awarded = points_awarded
+                        submission.save()
+                    if activity_log and activity_log.details:
+                        activity_log.details["points_awarded"] = points_awarded
+                        activity_log.save()
 
                     # Persist user and class completion relations
                     request.user.challenges_done.add(challenge)
@@ -201,15 +209,24 @@ def validate_flag(request):
                             completion.points_earned = points_awarded
                             completion.first_completion_for_class = first_for_class
                             completion.save()
-
-                    from ..logging.models import FlagSubmission
-
-                    FlagSubmission.objects.filter(
-                        user=request.user,
-                        challenge=challenge,
-                        submitted_flag=flag,
-                        is_correct=True,
-                    ).update(points_awarded=points_awarded)
+                else:
+                    # User already completed this challenge, no points
+                    points_awarded = 0
+                    if submission:
+                        submission.points_awarded = points_awarded
+                        submission.save()
+                    if activity_log and activity_log.details:
+                        activity_log.details["points_awarded"] = points_awarded
+                        activity_log.save()
+            else:
+                # Challenge is locked, no points
+                points_awarded = 0
+                if submission:
+                    submission.points_awarded = points_awarded
+                    submission.save()
+                if activity_log and activity_log.details:
+                    activity_log.details["points_awarded"] = points_awarded
+                    activity_log.save()
 
             response = {"result": "success", "points": points_awarded}
 
@@ -222,6 +239,9 @@ def validate_flag(request):
                     decreasing_challenges[ch.id] = ch.get_current_points()
                 response["decreasing_challenges_update"] = decreasing_challenges
         else:
+            # Incorrect flag
+            points_awarded = 0
+            # submission.points_awarded is already 0, no need to update
             response = {"result": "failure"}
         return JsonResponse(response)
     else:

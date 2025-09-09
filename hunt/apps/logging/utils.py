@@ -39,7 +39,7 @@ def log_flag_submission(
             if is_correct
             else ActivityType.FLAG_SUBMIT_INCORRECT
         )
-        ActivityLog.objects.create(
+        activity_log = ActivityLog.objects.create(
             user=user,
             activity_type=activity_type,
             ip_address=ip_address,
@@ -53,11 +53,11 @@ def log_flag_submission(
             },
         )
 
-        return submission
+        return submission, activity_log
 
     except Exception as e:
         logger.error(f"Error logging flag submission: {e}")
-        return None
+        return None, None
 
 
 def log_challenge_completion(

@@ -224,15 +224,24 @@ def user_activity(request, user_id):
     page_obj = paginator.get_page(page_number)
 
     # User stats
+    total_submissions = flag_submissions.count()
+    correct_submissions = flag_submissions.filter(is_correct=True).count()
+
+    # Calculate success rate
+    success_rate = (
+        (correct_submissions / total_submissions * 100) if total_submissions > 0 else 0
+    )
+
     stats = {
         "total_activities": activities.count(),  # Already excludes page views
-        "total_submissions": flag_submissions.count(),
-        "correct_submissions": flag_submissions.filter(is_correct=True).count(),
+        "total_submissions": total_submissions,
+        "correct_submissions": correct_submissions,
         "total_completions": completions.count(),
         "total_points": completions.aggregate(Sum("points_earned"))[
             "points_earned__sum"
         ]
         or 0,
+        "success_rate": round(success_rate, 1),
     }
 
     context = {
