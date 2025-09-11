@@ -270,3 +270,8 @@ def custom_404_view(request, exception):
         context["dark_mode"] = False
 
     return render(request, "404.html", context, status=404)
+
+
+def challenge_163624_view(request):
+    """Challenge page that looks like 404 but has hidden riddle in console"""
+    return render(request, "challenge_163624.html", status=404)
