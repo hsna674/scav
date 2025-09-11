@@ -229,7 +229,7 @@ HUNT_MANUAL_CONTROL = True
 # Site maintenance control
 # Site opening time (when site becomes available to all users)
 # Format: "YYYY-MM-DD HH:MM:SS" in EST/EDT timezone
-SITE_START_TIME = "2025-09-22 08:40:00"
+SITE_START_TIME = "2025-09-22 08:30:00"
 
 # Manual site control - set to False to immediately put site in maintenance mode
 SITE_MANUAL_CONTROL = True
