@@ -216,9 +216,6 @@ except ImportError:
 if SECRET_KEY is None:
     raise ValueError("SECRET_KEY must be defined in secret.py")
 
-# Site enabled toggle. Set to False to put site in maintenance mode (superusers still allowed).
-SITE_ENABLED = False
-
 # Hunt configuration
 HUNT_YEAR = 2025
 
@@ -228,3 +225,11 @@ HUNT_END_TIME = "2025-09-26 17:00:00"
 
 # Manual hunt control - set to False to immediately disable submissions
 HUNT_MANUAL_CONTROL = True
+
+# Site maintenance control
+# Site opening time (when site becomes available to all users)
+# Format: "YYYY-MM-DD HH:MM:SS" in EST/EDT timezone
+SITE_START_TIME = "2025-09-11 19:10:00"
+
+# Manual site control - set to False to immediately put site in maintenance mode
+SITE_MANUAL_CONTROL = True

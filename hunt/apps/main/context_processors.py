@@ -43,13 +43,46 @@ def is_hunt_active():
     return True
 
 
+def is_site_available():
+    """
+    Determine if the site is available to regular users based on manual control and start time.
+    """
+    # Check manual control first
+    manual_control = getattr(settings, "SITE_MANUAL_CONTROL", True)
+    if not manual_control:
+        return False
+
+    # Check if site has opened based on time
+    site_start_time_str = getattr(settings, "SITE_START_TIME", None)
+    if site_start_time_str:
+        try:
+            # Parse the start time string
+            est = zoneinfo.ZoneInfo("America/New_York")
+            site_start_time = datetime.strptime(
+                site_start_time_str, "%Y-%m-%d %H:%M:%S"
+            )
+            site_start_time = site_start_time.replace(tzinfo=est)
+
+            # Check if current time is before start time
+            current_time = timezone.now()
+            if current_time < site_start_time:
+                return False
+        except (ValueError, TypeError):
+            # If there's an error parsing the time, default to manual control
+            pass
+
+    return True
+
+
 def hunt_context(request):
     """
-    Add hunt-related context variables to all templates.
+    Add hunt-related and site-related context variables to all templates.
     Also checks if hunt has just ended and triggers Discord notification.
     """
     hunt_active = is_hunt_active()
     hunt_end_time_str = getattr(settings, "HUNT_END_TIME", None)
+    site_available = is_site_available()
+    site_start_time_str = getattr(settings, "SITE_START_TIME", None)
 
     # Check and notify if hunt has just ended (only on main pages to avoid spam)
     if request.path in ["/", "/main/", "/hunt/"] or request.path.startswith("/main/"):
@@ -59,6 +92,8 @@ def hunt_context(request):
         "HUNT_YEAR": settings.HUNT_YEAR,
         "HUNT_ACTIVE": hunt_active,
         "HUNT_END_TIME": hunt_end_time_str,
+        "SITE_AVAILABLE": site_available,
+        "SITE_START_TIME": site_start_time_str,
     }
 
 

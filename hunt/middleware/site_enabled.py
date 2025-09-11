@@ -52,18 +52,22 @@ class SiteEnabledMiddleware:
             # In case auth backend is misconfigured, allow to avoid lockout
             return self.get_response(request)
 
-        # Determine enabled state: prefer settings.SITE_ENABLED if present
-        enabled = getattr(settings, "SITE_ENABLED", None)
-        if enabled is None:
-            try:
-                # Import lazily to avoid AppRegistryNotReady during settings import
-                from hunt.apps.main.models import SiteConfig
+        # Determine site availability using the control system
+        try:
+            # Import lazily to avoid circular imports
+            from hunt.apps.main.context_processors import is_site_available
 
-                enabled = SiteConfig.is_enabled()
-            except Exception:
-                enabled = True
+            site_available = is_site_available()
+        except Exception:
+            # Fallback to True if there's an error to avoid lockout
+            site_available = True
 
-        if not enabled:
-            return render(request, "maintenance.html", status=503)
+        if not site_available:
+            # Get site start time for the maintenance page
+            site_start_time = getattr(settings, "SITE_START_TIME", None)
+            context = {
+                "SITE_START_TIME": site_start_time,
+            }
+            return render(request, "maintenance.html", context, status=503)
 
         return self.get_response(request)
