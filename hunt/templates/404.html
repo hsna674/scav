@@ -1,0 +1,166 @@
+{% extends 'base_with_nav.html' %}
+{% load static %}
+
+{% block head %}
+<link rel='stylesheet' href="{% static 'css/base.css' %}">
+<style>
+.error-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    padding: 40px 20px;
+    text-align: center;
+}
+
+.error-code {
+    font-size: 8rem;
+    font-weight: 700;
+    color: #e74c3c;
+    margin: 0;
+    line-height: 1;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+body.dark-mode .error-code {
+    color: #ef4444;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.error-title {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin: 20px 0 10px 0;
+}
+
+body.dark-mode .error-title {
+    color: #e2e8f0;
+}
+
+.error-description {
+    font-size: 1.1rem;
+    color: #7f8c8d;
+    margin-bottom: 30px;
+    max-width: 500px;
+    line-height: 1.5;
+}
+
+body.dark-mode .error-description {
+    color: #94a3b8;
+}
+
+.error-actions {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.btn-home, .btn-back {
+    padding: 12px 24px;
+    font-size: 16px;
+    font-weight: 500;
+    text-decoration: none;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-home {
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    color: white;
+    border: none;
+}
+
+.btn-home:hover {
+    background: linear-gradient(135deg, #2980b9 0%, #1f4e79 100%);
+    color: white;
+    text-decoration: none;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+}
+
+.btn-back {
+    background: transparent;
+    color: #3498db;
+    border: 2px solid #3498db;
+}
+
+.btn-back:hover {
+    background: #3498db;
+    color: white;
+    text-decoration: none;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.2);
+}
+
+body.dark-mode .btn-back {
+    color: #60a5fa;
+    border-color: #60a5fa;
+}
+
+body.dark-mode .btn-back:hover {
+    background: #60a5fa;
+    color: #1e293b;
+}
+
+
+
+@media (max-width: 768px) {
+    .error-code {
+        font-size: 5rem;
+    }
+    
+    .error-title {
+        font-size: 1.5rem;
+    }
+    
+    .error-actions {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .btn-home, .btn-back {
+        width: 200px;
+        justify-content: center;
+    }
+}
+</style>
+
+<script>
+// Set dark mode class on body
+$(document).ready(function() {
+    {% if dark_mode %}
+    document.body.classList.add('dark-mode');
+    {% endif %}
+});
+</script>
+{% endblock %}
+
+{% block main %}
+<div class="container-fluid">
+    <div class="error-container">
+        <div class="error-code">404</div>
+        <h1 class="error-title">Page Not Found</h1>
+        <p class="error-description">
+            Oops! The page you're looking for seems to have gone on its own scavenger hunt. 
+            It might have been moved, deleted, or you may have followed a broken link.
+        </p>
+        
+        <div class="error-actions">
+            <a href="{% url 'main:index' %}" class="btn-home">
+                <i class="fas fa-home"></i>
+                Return to Hunt
+            </a>
+            <a href="javascript:history.back()" class="btn-back">
+                <i class="fas fa-arrow-left"></i>
+                Go Back
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

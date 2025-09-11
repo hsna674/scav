@@ -8,3 +8,6 @@ urlpatterns = [
     path("main/", include("hunt.apps.main.urls", namespace="main")),
     path("logging/", include("hunt.apps.logging.urls", namespace="logging")),
 ]
+
+# Custom error handlers
+handler404 = "hunt.apps.main.views.custom_404_view"

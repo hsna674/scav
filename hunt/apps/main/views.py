@@ -257,3 +257,16 @@ def support(request):
             "dark_mode": request.user.dark_mode,
         },
     )
+
+
+def custom_404_view(request, exception):
+    """Custom 404 view that renders our themed error page"""
+    context = {}
+
+    # Add dark mode context if user is authenticated
+    if request.user.is_authenticated and hasattr(request.user, "dark_mode"):
+        context["dark_mode"] = request.user.dark_mode
+    else:
+        context["dark_mode"] = False
+
+    return render(request, "404.html", context, status=404)
