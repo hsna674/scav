@@ -312,7 +312,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 </div>
                 
                 <div class="challenge-content">
-                    {% if not status.0.unblocked and request.user.is_staff %}
+                    {% if not status.0.unblocked and request.user.is_committee %}
                         <p class="challenge-description">This challenge is currently unavailable.</p>
                     {% elif status.1 == 'completed' %}
                         <p class="challenge-description">{{ status.0.short_description|linkify }}</p>
