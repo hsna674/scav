@@ -448,6 +448,67 @@ body.dark-mode .flag-input.error {
     border-color: #3498db !important;
 }
 
+/* Challenge move buttons */
+.challenge-move-up-btn,
+.challenge-move-down-btn {
+    position: absolute;
+    top: 6px;
+    background: rgba(100, 116, 139, 0.6);
+    border: none;
+    border-radius: 10px;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    opacity: 0;
+    z-index: 10;
+    font-size: 10px;
+}
+
+.challenge-move-up-btn {
+    left: 6px;
+}
+
+.challenge-move-down-btn {
+    right: 6px;
+}
+
+.challenge-box:hover .challenge-move-up-btn,
+.challenge-box:hover .challenge-move-down-btn {
+    opacity: 1;
+}
+
+.challenge-move-up-btn:hover,
+.challenge-move-down-btn:hover {
+    background: rgba(52, 152, 219, 0.8);
+    transform: scale(1.1);
+}
+
+.challenge-move-up-btn:active,
+.challenge-move-down-btn:active {
+    transform: scale(0.95);
+}
+
+body.dark-mode .challenge-move-up-btn,
+body.dark-mode .challenge-move-down-btn {
+    background: rgba(71, 85, 105, 0.7);
+}
+
+body.dark-mode .challenge-move-up-btn:hover,
+body.dark-mode .challenge-move-down-btn:hover {
+    background: rgba(96, 165, 250, 0.8);
+}
+
+.challenge-move-up-btn svg,
+.challenge-move-down-btn svg {
+    width: 100%;
+    height: 100%;
+}
+
 /* Rate limit alert styling for JavaScript-generated alerts */
 .rate-limit-alert {
     margin-top: 8px;

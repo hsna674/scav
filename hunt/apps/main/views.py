@@ -41,10 +41,10 @@ def index(request):
         )
 
         categories_dict = dict()
-        for category in Category.objects.all():
+        for category in Category.objects.all().order_by("order", "name"):
             challenges_dict = dict()
             # Filter challenges to only include released ones (unless user is staff)
-            challenges_qs = category.challenges.all()
+            challenges_qs = category.challenges.all().order_by("order", "id")
             if not request.user.is_staff:
                 challenges_qs = challenges_qs.filter(unblocked=True)
 
@@ -280,3 +280,149 @@ def custom_404_view(request, exception):
 def challenge_163624_view(request):
     """Challenge page that looks like 404 but has hidden riddle in console"""
     return render(request, "challenge_163624.html", status=404)
+
+
+@require_POST
+@login_required
+def move_challenge_up(request):
+    """Move a challenge up one position in the ordering"""
+    if not request.user.is_staff:
+        return JsonResponse({"success": False, "error": "Permission denied"})
+
+    try:
+        challenge_id = request.POST.get("challenge_id")
+        category_id = request.POST.get("category_id")
+
+        if not challenge_id or not category_id:
+            return JsonResponse(
+                {"success": False, "error": "Missing challenge_id or category_id"}
+            )
+
+        challenge = get_object_or_404(Challenge, id=challenge_id)
+        category = get_object_or_404(Category, id=category_id)
+
+        # Get all challenges in this category ordered by order, then id
+        challenges_in_category = list(
+            Challenge.objects.filter(category=category).order_by("order", "id")
+        )
+
+        # Find the current challenge's position
+        try:
+            current_index = challenges_in_category.index(challenge)
+        except ValueError:
+            return JsonResponse(
+                {"success": False, "error": "Challenge not found in category"}
+            )
+
+        # Can't move up if it's already first
+        if current_index == 0:
+            return JsonResponse(
+                {"success": False, "error": "Challenge is already at the top"}
+            )
+
+        # Get the challenge above it
+        challenge_above = challenges_in_category[current_index - 1]
+
+        # Swap their order values
+        current_order = challenge.order
+        above_order = challenge_above.order
+
+        # If they have the same order, create a gap
+        if current_order == above_order:
+            # Set the current challenge to have a lower order than the one above
+            challenge.order = above_order - 1
+        else:
+            # Swap the orders
+            challenge.order = above_order
+            challenge_above.order = current_order
+            challenge_above.save()
+
+        challenge.save()
+
+        # Recalculate sequential ordering to clean up gaps/duplicates
+        challenges_in_category_fresh = Challenge.objects.filter(
+            category=category
+        ).order_by("order", "id")
+        for i, chall in enumerate(challenges_in_category_fresh, 1):
+            if chall.order != i:
+                chall.order = i
+                chall.save()
+
+        return JsonResponse({"success": True})
+
+    except Exception as e:
+        logger.error(f"Error moving challenge up: {str(e)}")
+        return JsonResponse({"success": False, "error": "An error occurred"})
+
+
+@require_POST
+@login_required
+def move_challenge_down(request):
+    """Move a challenge down one position in the ordering"""
+    if not request.user.is_staff:
+        return JsonResponse({"success": False, "error": "Permission denied"})
+
+    try:
+        challenge_id = request.POST.get("challenge_id")
+        category_id = request.POST.get("category_id")
+
+        if not challenge_id or not category_id:
+            return JsonResponse(
+                {"success": False, "error": "Missing challenge_id or category_id"}
+            )
+
+        challenge = get_object_or_404(Challenge, id=challenge_id)
+        category = get_object_or_404(Category, id=category_id)
+
+        # Get all challenges in this category ordered by order, then id
+        challenges_in_category = list(
+            Challenge.objects.filter(category=category).order_by("order", "id")
+        )
+
+        # Find the current challenge's position
+        try:
+            current_index = challenges_in_category.index(challenge)
+        except ValueError:
+            return JsonResponse(
+                {"success": False, "error": "Challenge not found in category"}
+            )
+
+        # Can't move down if it's already last
+        if current_index == len(challenges_in_category) - 1:
+            return JsonResponse(
+                {"success": False, "error": "Challenge is already at the bottom"}
+            )
+
+        # Get the challenge below it
+        challenge_below = challenges_in_category[current_index + 1]
+
+        # Swap their order values
+        current_order = challenge.order
+        below_order = challenge_below.order
+
+        # If they have the same order, create a gap
+        if current_order == below_order:
+            # Set the current challenge to have a higher order than the one below
+            challenge.order = below_order + 1
+        else:
+            # Swap the orders
+            challenge.order = below_order
+            challenge_below.order = current_order
+            challenge_below.save()
+
+        challenge.save()
+
+        # Recalculate sequential ordering to clean up gaps/duplicates
+        challenges_in_category_fresh = Challenge.objects.filter(
+            category=category
+        ).order_by("order", "id")
+        for i, chall in enumerate(challenges_in_category_fresh, 1):
+            if chall.order != i:
+                chall.order = i
+                chall.save()
+
+        return JsonResponse({"success": True})
+
+    except Exception as e:
+        logger.error(f"Error moving challenge down: {str(e)}")
+        return JsonResponse({"success": False, "error": "An error occurred"})

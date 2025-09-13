@@ -99,6 +99,58 @@
         }
     }
     
+    function moveChallengeUp(challengeId, categoryId) {
+        // Prevent the button click from triggering the admin-clickable functionality
+        event.stopPropagation();
+        
+        $.ajax({
+            type: 'POST',
+            url: "{% url 'main:move_challenge_up' %}",
+            data: {
+                csrfmiddlewaretoken: '{{ csrf_token }}',
+                challenge_id: challengeId,
+                category_id: categoryId,
+            },
+            success: function (data) {
+                if (data.success) {
+                    // Reload the page to show the new order
+                    location.reload();
+                } else {
+                    alert('Error: ' + (data.error || 'Could not move challenge'));
+                }
+            },
+            error: function () {
+                alert('Error: Could not move challenge');
+            }
+        });
+    }
+    
+    function moveChallengeDown(challengeId, categoryId) {
+        // Prevent the button click from triggering the admin-clickable functionality
+        event.stopPropagation();
+        
+        $.ajax({
+            type: 'POST',
+            url: "{% url 'main:move_challenge_down' %}",
+            data: {
+                csrfmiddlewaretoken: '{{ csrf_token }}',
+                challenge_id: challengeId,
+                category_id: categoryId,
+            },
+            success: function (data) {
+                if (data.success) {
+                    // Reload the page to show the new order
+                    location.reload();
+                } else {
+                    alert('Error: ' + (data.error || 'Could not move challenge'));
+                }
+            },
+            error: function () {
+                alert('Error: Could not move challenge');
+            }
+        });
+    }
+    
     // Set dark mode class on body
     $(document).ready(function() {
         {% if dark_mode %}
@@ -234,10 +286,24 @@ document.addEventListener("DOMContentLoaded", function () {
             <div id="box{{ status.0.id }}" class="challenge-box {% if status.1 == 'available' %}available{% elif status.1 == 'completed' %}completed{% else %}locked{% endif %}{% if request.user.is_staff %} admin-clickable{% endif %}"
                 {% if request.user.is_staff %}
                     data-admin-url="{% url 'admin:main_challenge_change' status.0.id %}"
-                    title="Edit this challenge"
+                    title="Edit this challenge (Order: {{ status.0.order }})"
                 {% endif %}>
+                {% if request.user.is_staff %}
+                    <button class="challenge-move-up-btn" onclick="moveChallengeUp({{ status.0.id }}, {{ category.id }})" title="Move up">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M3 17l9-10 9 10z"/>
+                        </svg>
+                    </button>
+                    <button class="challenge-move-down-btn" onclick="moveChallengeDown({{ status.0.id }}, {{ category.id }})" title="Move down">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M3 7l9 10 9-10z"/>
+                        </svg>
+                    </button>
+                {% endif %}
                 <div class="challenge-header">
-                    <h4 class="challenge-title">{{ status.0.name }}</h4>
+                    <h4 class="challenge-title">
+                        {{ status.0.name }}
+                    </h4>
                     {% if status.0.is_decreasing and status.1 == 'available' and status|length > 2 %}
                         <p class="challenge-points">{{ status.2 }} points</p>
                     {% else %}

@@ -118,7 +118,7 @@ def flag_submissions(request):
     page_obj = paginator.get_page(page_number)
 
     # Get filter options
-    challenges = Challenge.objects.all().order_by("name")
+    challenges = Challenge.objects.all().order_by("category", "order", "name")
     users = User.objects.filter(is_student=True).order_by("username")
     classes = Class.objects.all().order_by("year")
 
@@ -305,7 +305,7 @@ def class_leaderboard(request):
             "submissions", filter=Q(submissions__is_correct=True)
         ),
         completion_count=Count("completions"),
-    ).order_by("-total_submissions")
+    ).order_by("category", "order", "name")
 
     # Calculate success rate safely to avoid division by zero
     for challenge in challenge_stats:

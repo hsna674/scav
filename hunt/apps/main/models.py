@@ -7,6 +7,14 @@ class Category(models.Model):
     id = models.AutoField(primary_key=True, null=False, blank=False)
     name = models.CharField(max_length=200, null=False, blank=False)
     description = models.CharField(max_length=200, null=False, blank=False)
+    order = models.IntegerField(
+        default=0,
+        help_text="Order on the main page (lower numbers appear first)",
+    )
+
+    class Meta:
+        ordering = ["order", "name"]
+        verbose_name_plural = "Categories"
 
     def __str__(self):
         return self.name
@@ -39,6 +47,10 @@ class Challenge(models.Model):
     )
     locked = models.BooleanField(default=False)
     unblocked = models.BooleanField(default=False)
+    order = models.IntegerField(
+        default=0,
+        help_text="Order within category (lower numbers appear first)",
+    )
     category = models.ForeignKey(
         Category,
         null=True,
@@ -46,6 +58,9 @@ class Challenge(models.Model):
         related_name="challenges",
         on_delete=models.SET_NULL,
     )
+
+    class Meta:
+        ordering = ["category", "order", "id"]
 
     def __str__(self):
         return "{} ({})".format(self.name, self.id)

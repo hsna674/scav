@@ -16,6 +16,7 @@ class ChallengeAdmin(admin.ModelAdmin):
         "decay_percentage",
         "unblocked",
         "category",
+        "order",
     )
     list_display = (
         "name",
@@ -25,9 +26,11 @@ class ChallengeAdmin(admin.ModelAdmin):
         "unblocked",
         "locked",
         "category",
+        "order",
         "submissions_link",
     )
     list_filter = ("challenge_type", "unblocked", "locked", "category")
+    list_editable = ("order",)
     readonly_fields = ("locked",)
 
     def get_form(self, request, obj=None, **kwargs):
@@ -69,10 +72,51 @@ class ChallengeAdmin(admin.ModelAdmin):
 
     release_challenges.short_description = "Release selected challenges"
 
-    actions = ["release_challenges"]
+    def reset_order_sequential(self, request, queryset):
+        """Reset order to sequential numbers starting from 1"""
+        challenges = queryset.order_by("category", "order", "id")
+        current_category = None
+        order_counter = 1
+
+        for challenge in challenges:
+            if challenge.category != current_category:
+                current_category = challenge.category
+                order_counter = 1
+
+            challenge.order = order_counter
+            challenge.save()
+            order_counter += 1
+
+        count = queryset.count()
+        self.message_user(request, f"Successfully reset order for {count} challenges.")
+
+    reset_order_sequential.short_description = (
+        "Reset order to sequential numbers (1, 2, 3...)"
+    )
+
+    def set_order_to_points(self, request, queryset):
+        """Set order based on points (highest points first)"""
+        for challenge in queryset:
+            challenge.order = challenge.points
+            challenge.save()
+
+        count = queryset.count()
+        self.message_user(
+            request, f"Successfully set order based on points for {count} challenges."
+        )
+
+    set_order_to_points.short_description = "Set order based on points (highest first)"
+
+    actions = ["release_challenges", "reset_order_sequential", "set_order_to_points"]
 
 
-admin.site.register(Category)
+@admin.register(Category)
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ("name", "description", "order")
+    list_editable = ("order",)
+    ordering = ("order", "name")
+
+
 admin.site.register(Class)
 
 # Customize the admin index page
