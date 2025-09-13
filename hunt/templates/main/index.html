@@ -286,7 +286,7 @@ document.addEventListener("DOMContentLoaded", function () {
             <div id="box{{ status.0.id }}" class="challenge-box {% if status.1 == 'available' %}available{% elif status.1 == 'completed' %}completed{% else %}locked{% endif %}{% if request.user.is_staff %} admin-clickable{% endif %}"
                 {% if request.user.is_staff %}
                     data-admin-url="{% url 'admin:main_challenge_change' status.0.id %}"
-                    title="Edit this challenge (Order: {{ status.0.order }})"
+                    title="Edit this challenge"
                 {% endif %}>
                 {% if request.user.is_staff %}
                     <button class="challenge-move-up-btn" onclick="moveChallengeUp({{ status.0.id }}, {{ category.id }})" title="Move up">
