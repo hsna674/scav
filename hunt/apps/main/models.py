@@ -1,6 +1,6 @@
 from django.db import models
 from django.apps import apps
-from django.db.models import Sum
+from django.db.models import Sum, Max
 
 
 class Category(models.Model):
@@ -64,6 +64,21 @@ class Challenge(models.Model):
 
     def __str__(self):
         return "{} ({})".format(self.name, self.id)
+
+    def save(self, *args, **kwargs):
+        # If this is a new challenge (no ID yet) and no order is set,
+        # automatically place it at the end of its category
+        if not self.pk and self.order == 0 and self.category:
+            # Get the highest order number in this category
+            max_order = (
+                Challenge.objects.filter(category=self.category).aggregate(
+                    Max("order")
+                )["order__max"]
+                or 0
+            )
+            self.order = max_order + 1
+
+        super().save(*args, **kwargs)
 
     @property
     def is_exclusive(self):

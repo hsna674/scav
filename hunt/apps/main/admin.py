@@ -16,7 +16,6 @@ class ChallengeAdmin(admin.ModelAdmin):
         "decay_percentage",
         "unblocked",
         "category",
-        "order",
     )
     list_display = (
         "name",
@@ -26,11 +25,9 @@ class ChallengeAdmin(admin.ModelAdmin):
         "unblocked",
         "locked",
         "category",
-        "order",
         "submissions_link",
     )
     list_filter = ("challenge_type", "unblocked", "locked", "category")
-    list_editable = ("order",)
     readonly_fields = ("locked",)
 
     def get_form(self, request, obj=None, **kwargs):
