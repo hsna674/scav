@@ -30,21 +30,68 @@ def index(request):
             - completed (completed by users's class)
             - locked (can only be completed by one class and has been completed)
         """
-        data = sorted([(c.year, c.get_points()) for c in Class.objects.all()])
+        # OPTIMIZATION: Calculate all class points in a single query instead of N queries
+        from django.db.models import Sum, Count
+
+        class_points = {}
+        try:
+            # Get all class points in one query using aggregation
+            class_points_data = ChallengeCompletion.objects.values(
+                "class_year"
+            ).annotate(total_points=Sum("points_earned"))
+            for item in class_points_data:
+                class_points[item["class_year"]] = item["total_points"] or 0
+        except Exception:
+            # Fallback to original method if ChallengeCompletion not available
+            class_points = {c.year: c.get_points() for c in Class.objects.all()}
+
+        # Ensure all classes are represented (even with 0 points)
+        all_classes = Class.objects.all()
+        for cls in all_classes:
+            if cls.year not in class_points:
+                class_points[cls.year] = 0
+
+        data = sorted([(year, points) for year, points in class_points.items()])
 
         # Determine completed challenges for the user's class via ChallengeCompletion
-
         completed_ids = set(
             ChallengeCompletion.objects.filter(
                 class_year=str(request.user.graduation_year)
             ).values_list("challenge_id", flat=True)
         )
 
+        # OPTIMIZATION: Pre-calculate completion counts for decreasing challenges in a single query
+        decreasing_challenge_completion_counts = {}
+        try:
+            decreasing_challenges = Challenge.objects.filter(
+                challenge_type="decreasing"
+            )
+            if decreasing_challenges.exists():
+                completion_counts = (
+                    ChallengeCompletion.objects.filter(
+                        challenge__in=decreasing_challenges,
+                        first_completion_for_class=True,
+                    )
+                    .values("challenge_id")
+                    .annotate(count=Count("class_year", distinct=True))
+                )
+                for item in completion_counts:
+                    decreasing_challenge_completion_counts[item["challenge_id"]] = item[
+                        "count"
+                    ]
+        except Exception:
+            pass
+
+        # OPTIMIZATION: Use prefetch_related to load all challenges efficiently
         categories_dict = dict()
-        for category in Category.objects.all().order_by("order", "name"):
+        categories = Category.objects.prefetch_related("challenges").order_by(
+            "order", "name"
+        )
+
+        for category in categories:
             challenges_dict = dict()
             # Filter challenges to only include released ones (unless user is staff)
-            challenges_qs = category.challenges.all().order_by("order", "id")
+            challenges_qs = category.challenges.order_by("order", "id")
             if not request.user.is_staff:
                 challenges_qs = challenges_qs.filter(unblocked=True)
 
@@ -55,7 +102,13 @@ def index(request):
                     challenges_dict[c.id] = [c, "locked"]
                 else:
                     if c.is_decreasing:
-                        current_points = c.get_current_points()
+                        # OPTIMIZATION: Use pre-calculated completion count instead of querying database
+                        classes_completed = decreasing_challenge_completion_counts.get(
+                            c.id, 0
+                        )
+                        decay_factor = (100 - c.decay_percentage) / 100
+                        current_points = c.points * (decay_factor**classes_completed)
+                        current_points = max(1, round(current_points))
                         challenges_dict[c.id] = [c, "available", current_points]
                     else:
                         challenges_dict[c.id] = [c, "available"]
