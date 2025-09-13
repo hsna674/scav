@@ -18,7 +18,7 @@ python manage.py cleanup_logs --keep-recent 1000
 python manage.py cleanup_logs --days 7 --log-type submissions --exclude-successful-submissions
 
 # Delete only page views (keep everything else)
-python manage.py cleanup_logs --days 1 --log-type pageviews
+python manage.py cleanup_logs --days 1 --log-type activity
 
 # Clean up activity logs only, keeping recent 500
 python manage.py cleanup_logs --keep-recent 500 --log-type activity
@@ -28,7 +28,7 @@ python manage.py cleanup_logs --keep-recent 500 --log-type activity
 
 - `--days N`: Delete logs older than N days
 - `--keep-recent N`: Keep only the most recent N records for each log type
-- `--log-type TYPE`: Which logs to clean (`activity`, `submissions`, `completions`, `pageviews`, `all`)
+- `--log-type TYPE`: Which logs to clean (`activity`, `submissions`, `completions`, `all`)
 - `--dry-run`: Show what would be deleted without actually deleting
 - `--force`: Skip confirmation prompt
 - `--exclude-successful-submissions`: When cleaning submissions, keep all correct flag submissions
@@ -47,7 +47,7 @@ python manage.py cleanup_logs --keep-recent 500 --log-type activity
 
 ```bash
 # Delete page views older than 7 days (they grow quickly)
-python manage.py cleanup_logs --days 7 --log-type pageviews --force
+python manage.py cleanup_logs --days 7 --log-type activity --force
 
 # Keep only recent 10,000 activity logs (excluding page views)
 python manage.py cleanup_logs --keep-recent 10000 --log-type activity --force
@@ -69,11 +69,12 @@ python manage.py cleanup_logs --keep-recent 100 --force
 
 ## Log Types
 
-- **activity**: User login/logout, page views, admin actions, flag submissions
+- **activity**: User login/logout, admin actions, flag submissions (page view logging removed for performance)
 - **submissions**: Detailed flag submission records with submitted flags and points
 - **completions**: Challenge completion records with points and class info
-- **pageviews**: Page view tracking for analytics (grows quickly)
 - **all**: All of the above (default)
+
+Note: Page view logging was removed to improve performance - it was creating a database record for every page load.
 
 ## Performance Notes
 

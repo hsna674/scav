@@ -3,11 +3,10 @@ from django.utils import timezone
 from datetime import timedelta
 from django.db import transaction
 
-from hunt.apps.logging.models import (
+from ...logging.models import (
     ActivityLog,
     FlagSubmission,
     ChallengeCompletion,
-    PageView,
 )
 
 
@@ -27,7 +26,7 @@ class Command(BaseCommand):
         )
         parser.add_argument(
             "--log-type",
-            choices=["activity", "submissions", "completions", "pageviews", "all"],
+            choices=["activity", "submissions", "completions", "all"],
             default="all",
             help="Which type of logs to clean up (default: all)",
         )
@@ -69,8 +68,7 @@ class Command(BaseCommand):
             models_to_clean.append(("FlagSubmission", FlagSubmission))
         if options["log_type"] in ["completions", "all"]:
             models_to_clean.append(("ChallengeCompletion", ChallengeCompletion))
-        if options["log_type"] in ["pageviews", "all"]:
-            models_to_clean.append(("PageView", PageView))
+        # PageView model removed for performance - was creating database record for every page load
 
         # Calculate what would be deleted
         deletion_summary = {}

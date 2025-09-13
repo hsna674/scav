@@ -11,7 +11,6 @@ class ActivityType(models.TextChoices):
     FLAG_SUBMIT_CORRECT = "flag_correct", "Correct Flag Submission"
     FLAG_SUBMIT_INCORRECT = "flag_incorrect", "Incorrect Flag Submission"
     CHALLENGE_COMPLETED = "challenge_completed", "Challenge Completed"
-    PAGE_VIEW = "page_view", "Page View"
     ADMIN_ACTION = "admin_action", "Admin Action"
 
 
@@ -101,27 +100,4 @@ class ChallengeCompletion(models.Model):
         return f"{self.user.username} completed {self.challenge.name} ({self.points_earned} pts)"
 
 
-class PageView(models.Model):
-    """Track page views for analytics"""
-
-    id = models.AutoField(primary_key=True)
-    user = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="page_views", null=True, blank=True
-    )
-    path = models.CharField(max_length=500)
-    timestamp = models.DateTimeField(default=timezone.now)
-    ip_address = models.GenericIPAddressField(null=True, blank=True)
-    user_agent = models.TextField(blank=True)
-    referer = models.CharField(max_length=500, blank=True)
-
-    class Meta:
-        ordering = ["-timestamp"]
-        indexes = [
-            models.Index(fields=["timestamp"]),
-            models.Index(fields=["user", "timestamp"]),
-            models.Index(fields=["path", "timestamp"]),
-        ]
-
-    def __str__(self):
-        user_str = self.user.username if self.user else "Anonymous"
-        return f"{user_str} viewed {self.path} at {self.timestamp}"
+# PageView model removed for performance - was creating database record for every page load

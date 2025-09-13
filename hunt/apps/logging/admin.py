@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from django.urls import reverse
-from .models import ActivityLog, FlagSubmission, ChallengeCompletion, PageView
+from .models import ActivityLog, FlagSubmission, ChallengeCompletion
 
 
 @admin.register(ActivityLog)
@@ -298,32 +298,4 @@ class ChallengeCompletionAdmin(admin.ModelAdmin):
     actions = ["invalidate_completions"]
 
 
-@admin.register(PageView)
-class PageViewAdmin(admin.ModelAdmin):
-    list_display = ("timestamp", "user_link", "path", "ip_address")
-    list_filter = ("timestamp", "user__graduation_year")
-    search_fields = ("user__username", "path", "ip_address")
-    readonly_fields = (
-        "user",
-        "path",
-        "timestamp",
-        "ip_address",
-        "user_agent",
-        "referer",
-    )
-    date_hierarchy = "timestamp"
-
-    def user_link(self, obj):
-        if obj.user:
-            url = reverse("admin:users_user_change", args=[obj.user.pk])
-            return format_html('<a href="{}">{}</a>', url, obj.user.username)
-        return "Anonymous"
-
-    user_link.short_description = "User"
-    user_link.admin_order_field = "user__username"
-
-    def has_add_permission(self, request):
-        return False
-
-    def has_change_permission(self, request, obj=None):
-        return False
+# PageViewAdmin removed - PageView model was removed for performance

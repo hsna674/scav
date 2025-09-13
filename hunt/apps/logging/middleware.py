@@ -4,66 +4,18 @@ from django.contrib.auth.signals import user_logged_in, user_logged_out
 from django.dispatch import receiver
 from django.utils import timezone
 
-from .models import ActivityLog, ActivityType, PageView
+from .models import ActivityLog, ActivityType
 
 logger = logging.getLogger(__name__)
 
 
 class ActivityLoggingMiddleware(MiddlewareMixin):
-    """Middleware to log page views and general activity"""
-
-    # Paths to exclude from logging (static files, admin media, etc.)
-    EXCLUDED_PATHS = [
-        "/static/",
-        "/admin/jsi18n/",
-        "/favicon.ico",
-        "/robots.txt",
-    ]
-
-    # Paths that should be logged as page views
-    LOGGED_PATHS = [
-        "/",
-        "/challenge/",
-        "/support/",
-        # Removed deprecated /overview/ path
-    ]
+    """Middleware for activity logging - page view logging removed for performance"""
 
     def process_request(self, request):
-        """Log page views for authenticated users"""
-
-        # Skip if path should be excluded
-        if any(request.path.startswith(excluded) for excluded in self.EXCLUDED_PATHS):
-            return None
-
-        # Only log for authenticated users (or specific paths for anonymous)
-        if request.user.is_authenticated:
-            # Log page view
-            try:
-                PageView.objects.create(
-                    user=request.user,
-                    path=request.path,
-                    ip_address=self.get_client_ip(request),
-                    user_agent=request.META.get("HTTP_USER_AGENT", "")[:500],
-                    referer=request.META.get("HTTP_REFERER", "")[:500],
-                )
-
-                # Log general activity for important pages
-                if any(request.path.startswith(path) for path in self.LOGGED_PATHS):
-                    ActivityLog.objects.create(
-                        user=request.user,
-                        activity_type=ActivityType.PAGE_VIEW,
-                        ip_address=self.get_client_ip(request),
-                        user_agent=request.META.get("HTTP_USER_AGENT", ""),
-                        details={
-                            "path": request.path,
-                            "method": request.method,
-                            "referer": request.META.get("HTTP_REFERER", ""),
-                        },
-                    )
-            except Exception as e:
-                # Don't let logging errors break the request
-                logger.error(f"Error logging activity: {e}")
-
+        """Process requests - page view logging has been removed for performance"""
+        # Page view logging removed to improve performance
+        # Previously logged every authenticated user request to database
         return None
 
     def get_client_ip(self, request):

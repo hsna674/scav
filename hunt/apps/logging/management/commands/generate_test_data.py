@@ -53,7 +53,7 @@ class Command(BaseCommand):
             activity_type = random.choice(
                 [
                     ActivityType.LOGIN,
-                    ActivityType.PAGE_VIEW,
+                    # PAGE_VIEW removed for performance
                     ActivityType.LOGOUT,
                 ]
             )
