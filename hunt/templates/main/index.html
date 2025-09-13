@@ -231,7 +231,6 @@ document.addEventListener("DOMContentLoaded", function () {
         
         <div id="c-{{ category.id }}" class="challenges-grid">
             {% for challenge, status in challenges.items %}
-            {% if status.0.unblocked %}
             <div id="box{{ status.0.id }}" class="challenge-box {% if status.1 == 'available' %}available{% elif status.1 == 'completed' %}completed{% else %}locked{% endif %}{% if request.user.is_staff %} admin-clickable{% endif %}"
                 {% if request.user.is_staff %}
                     data-admin-url="{% url 'admin:main_challenge_change' status.0.id %}"
@@ -247,7 +246,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 </div>
                 
                 <div class="challenge-content">
-                    {% if status.1 == 'completed' %}
+                    {% if not status.0.unblocked and request.user.is_staff %}
+                        <p class="challenge-description">This challenge is currently unavailable.</p>
+                    {% elif status.1 == 'completed' %}
                         <p class="challenge-description">{{ status.0.short_description|linkify }}</p>
                         <div class="challenge-status-text completed">Solved!</div>
                     {% elif status.1 == 'locked' %}
@@ -264,7 +265,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     {% endif %}
                 </div>
                 
-                {% if status.1 == 'available' %}
+                {% if status.1 == 'available' and status.0.unblocked %}
                 <div class="challenge-input">
                     {% if HUNT_ACTIVE or request.user.is_committee %}
                         <input type="text" id="{{ status.0.id }}" class="flag-input" placeholder="Enter the flag here" />
@@ -277,21 +278,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 </div>
                 {% endif %}
             </div>
-            {% else %}
-            <div id="box{{ status.0.id }}" class="challenge-box locked{% if request.user.is_staff %} admin-clickable{% endif %}"
-                {% if request.user.is_staff %}
-                    data-admin-url="{% url 'admin:main_challenge_change' status.0.id %}"
-                    title="Edit this challenge"
-                {% endif %}>
-                <div class="challenge-header">
-                    <h4 class="challenge-title">{{ status.0.name }}</h4>
-                    <p class="challenge-points">{{ status.0.points }} points</p>
-                </div>
-                <div class="challenge-content">
-                    <p class="challenge-description">This challenge is currently unavailable.</p>
-                </div>
-            </div>
-            {% endif %}
             {% endfor %}
         </div>
     </div>

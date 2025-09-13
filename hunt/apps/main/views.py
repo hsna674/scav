@@ -43,7 +43,12 @@ def index(request):
         categories_dict = dict()
         for category in Category.objects.all():
             challenges_dict = dict()
-            for c in category.challenges.all():
+            # Filter challenges to only include released ones (unless user is staff)
+            challenges_qs = category.challenges.all()
+            if not request.user.is_staff:
+                challenges_qs = challenges_qs.filter(unblocked=True)
+
+            for c in challenges_qs:
                 if c.id in completed_ids:
                     challenges_dict[c.id] = [c, "completed"]
                 elif c.locked:
