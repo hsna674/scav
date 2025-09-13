@@ -294,3 +294,46 @@ body.dark-mode .list-group-flush .list-group-item {
     border-left: 0 !important;
     border-right: 0 !important;
 }
+
+/* Mobile disclaimer styles */
+.mobile-disclaimer {
+    display: none; /* Hidden by default */
+    background-color: #ffeaa7;
+    border: 1px solid #fdcb6e;
+    color: #2d3436;
+    padding: 0;
+    margin: 0;
+    position: relative;
+    z-index: 9999;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.mobile-disclaimer-content {
+    padding: 12px 15px;
+    font-size: 14px;
+    line-height: 1.4;
+    position: relative;
+}
+
+.mobile-disclaimer-content i {
+    color: #e17055;
+    margin-right: 8px;
+}
+
+/* Dark mode for mobile disclaimer */
+body.dark-mode .mobile-disclaimer {
+    background-color: #2d3436;
+    border: 1px solid #636e72;
+    color: #ddd;
+}
+
+body.dark-mode .mobile-disclaimer-content i {
+    color: #fdcb6e;
+}
+
+/* Show disclaimer only on mobile devices */
+@media screen and (max-width: 768px) {
+    .mobile-disclaimer {
+        display: block !important;
+    }
+}

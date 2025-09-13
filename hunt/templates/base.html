@@ -20,6 +20,14 @@
         {% block head %}{% endblock %}
     </head>
     <body>
+        <!-- Mobile disclaimer - only visible on mobile devices -->
+        <div class="mobile-disclaimer">
+            <div class="mobile-disclaimer-content">
+                <i class="fas fa-exclamation-triangle"></i>
+                <strong>Mobile Notice:</strong> This site has limited mobile functionality and may not work properly on mobile devices. For the best experience, please use a desktop or laptop computer.
+            </div>
+        </div>
+        
         {% block root %}
             {% block main %}
             {% endblock %}
