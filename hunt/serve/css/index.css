@@ -153,16 +153,18 @@ body.dark-mode .category-description {
 }
 
 .challenges-grid {
-    overflow: hidden;
-    max-height: 2000px;
-    transition: max-height 0.5s ease, opacity 0.5s ease;
+    transition: opacity 0.5s ease, transform 0.5s ease;
     opacity: 1;
+    transform: scaleY(1);
+    transform-origin: top;
 }
 
 /* Hidden state */
 .challenges-grid.hidden {
-    max-height: 0;
     opacity: 0;
+    transform: scaleY(0);
+    height: 0;
+    overflow: hidden;
 }
 
 /* Challenge grid */
