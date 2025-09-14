@@ -98,14 +98,19 @@ def log_challenge_completion(
             },
         )
 
-        # Send Discord first blood notification if this is the first solve for the class
+        # Send Discord first blood notification asynchronously if this is the first solve for the class
         if first_for_class:
             try:
+                from threading import Thread
                 from ..main.discord_utils import send_first_blood_notification
 
-                send_first_blood_notification(
-                    user, challenge, class_year, points_earned
+                # Send Discord notification in background thread to avoid blocking submission
+                discord_thread = Thread(
+                    target=send_first_blood_notification,
+                    args=(user, challenge, class_year, points_earned),
+                    daemon=True,
                 )
+                discord_thread.start()
             except Exception as e:
                 # Discord notifications should never break challenge solving
                 logger.error(f"Discord notification failed: {e}")

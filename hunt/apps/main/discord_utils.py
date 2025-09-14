@@ -81,8 +81,8 @@ def send_first_blood_notification(user, challenge, class_year, points_earned):
             "embeds": [embed],
         }
 
-        # Send the webhook
-        response = requests.post(webhook_url, json=payload, timeout=10)
+        # Send the webhook with reduced timeout for better performance
+        response = requests.post(webhook_url, json=payload, timeout=3)
 
         if response.status_code == 204:
             logger.info(
@@ -175,8 +175,8 @@ def send_hunt_end_notification():
             "embeds": [embed],
         }
 
-        # Send the webhook
-        response = requests.post(webhook_url, json=payload, timeout=10)
+        # Send the webhook with reduced timeout for better performance
+        response = requests.post(webhook_url, json=payload, timeout=3)
 
         if response.status_code == 204:
             logger.info(f"Successfully sent hunt end notification for Hunt {hunt_year}")

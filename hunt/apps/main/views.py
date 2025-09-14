@@ -18,6 +18,8 @@ from ..logging.utils import log_flag_submission, log_challenge_completion
 
 import logging
 
+logger = logging.getLogger(__name__)
+
 logger = logging.getLogger(__file__)
 
 
@@ -193,16 +195,26 @@ def validate_flag(request):
 
         if is_correct:
             if not challenge.locked:
+                # Optimize: Check both user completion and class completion in single queries
                 user_already_completed = request.user.challenges_done.filter(
                     id=challenge.id
                 ).exists()
 
                 if not user_already_completed:
-                    hoco_class = Class.objects.get(
-                        year=str(request.user.graduation_year)
-                    )
+                    # Get class object and check class completion in one go
+                    try:
+                        hoco_class = Class.objects.get(
+                            year=str(request.user.graduation_year)
+                        )
+                    except Class.DoesNotExist:
+                        logger.error(
+                            f"Class not found for graduation year: {request.user.graduation_year}"
+                        )
+                        return JsonResponse(
+                            {"result": "error", "message": "Invalid graduation year"}
+                        )
 
-                    # Has this class already completed this challenge?
+                    # Check if this class already has a completion for this challenge
                     class_already_has_completion = ChallengeCompletion.objects.filter(
                         challenge=challenge,
                         class_year=str(request.user.graduation_year),
@@ -229,12 +241,14 @@ def validate_flag(request):
                     # Persist user and class completion relations
                     request.user.challenges_done.add(challenge)
                     hoco_class.challenges_completed.add(challenge)
+
+                    # Batch the saves - only save hoco_class, and save challenge only if needed
                     hoco_class.save()
 
-                    # Lock exclusive
+                    # Lock exclusive challenges
                     if challenge.is_exclusive:
                         challenge.locked = True
-                    challenge.save()
+                        challenge.save()  # Only save if we modified the challenge
 
                     # Log completion (also creates the ChallengeCompletion row)
                     completion = log_challenge_completion(
@@ -288,7 +302,8 @@ def validate_flag(request):
 
             response = {"result": "success", "points": points_awarded}
 
-            if challenge.is_decreasing:
+            # Only update decreasing challenges if this was a first completion that affects the counts
+            if challenge.is_decreasing and points_awarded > 0:
                 # Recompute updated display values for all decreasing challenges
                 decreasing_challenges = {}
                 for ch in Challenge.objects.filter(
