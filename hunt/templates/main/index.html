@@ -321,11 +321,19 @@ document.addEventListener("DOMContentLoaded", function () {
                         <p class="challenge-description">{{ status.0.short_description|linkify }}</p>
                         <p class="challenge-description">This challenge was exclusive and has already been completed by another class.</p>
                     {% elif status.1 == 'prerequisite_not_met' %}
-                        <p class="challenge-description">This challenge requires completing other challenges first.</p>
-                        <p class="challenge-description">Required challenges:</p>
+                        <p class="challenge-description">This challenge requires completing challenges first.</p>
+                        <p class="challenge-description">
+                            Progress: {{ status.2.completed_count }}/{{ status.2.needed_count }} 
+                            {% if status.2.needed_count < status.2.total_count %}
+                                ({{ status.2.needed_count }} of {{ status.2.total_count }} required)
+                            {% endif %}
+                        </p>
                         <ul class="required-challenges-list">
-                            {% for required_challenge in status.2 %}
-                                <li>{{ required_challenge.name }}</li>
+                            {% for req_info in status.2.required_challenges %}
+                                <li class="{% if req_info.completed %}completed{% endif %}">
+                                    {{ req_info.challenge.name }}
+                                    {% if req_info.completed %} ✓{% endif %}
+                                </li>
                             {% endfor %}
                         </ul>
                     {% elif status.0.is_exclusive %}

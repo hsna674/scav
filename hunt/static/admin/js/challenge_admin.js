@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const challengeTypeField = document.querySelector('#id_challenge_type');
     const decayPercentageField = document.querySelector('.field-decay_percentage');
     const requiredChallengesField = document.querySelector('.field-required_challenges');
+    const requiredChallengesCountField = document.querySelector('.field-required_challenges_count');
     const categoryField = document.querySelector('#id_category');
     const requiredChallengesSelect = document.querySelector('#id_required_challenges');
     
@@ -9,6 +10,7 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('Fields found:', {
         challengeType: !!challengeTypeField,
         requiredChallenges: !!requiredChallengesField,
+        requiredChallengesCount: !!requiredChallengesCountField,
         category: !!categoryField,
         select: !!requiredChallengesSelect
     });

@@ -1,10 +1,12 @@
-/* Hide required challenges field by default */
-.field-required_challenges {
+/* Hide required challenges fields by default */
+.field-required_challenges,
+.field-required_challenges_count {
     display: none !important;
 }
 
-/* Show required challenges field when unlocking type is selected */
-body.unlocking-challenge-type .field-required_challenges {
+/* Show required challenges fields when unlocking type is selected */
+body.unlocking-challenge-type .field-required_challenges,
+body.unlocking-challenge-type .field-required_challenges_count {
     display: block !important;
 }
 

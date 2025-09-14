@@ -336,30 +336,23 @@ body.dark-mode .challenge-description a:hover {
 
 /* Required challenges list */
 .required-challenges-list {
-    margin: 12px 0 0 0;
-    padding: 0;
     list-style: none;
-    background: rgba(249, 115, 22, 0.1);
-    border-radius: 6px;
-    padding: 8px 12px;
-    border-left: 3px solid #f59e0b;
+    padding-left: 0;
+    margin: 0;
 }
 
 .required-challenges-list li {
-    color: #92400e;
-    font-size: 0.85rem;
-    margin: 2px 0;
-    padding: 2px 0;
-    text-align: center;
+    padding: 4px 8px;
+    margin-bottom: 4px;
+    border-radius: 4px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-left: 3px solid #dc3545;
 }
 
-body.dark-mode .required-challenges-list {
-    background: rgba(245, 158, 11, 0.15);
-    border-left-color: #fbbf24;
-}
-
-body.dark-mode .required-challenges-list li {
-    color: #fbbf24;
+.required-challenges-list li.completed {
+    background-color: rgba(40, 167, 69, 0.1);
+    border-left: 3px solid #28a745;
+    color: #28a745;
 }
 
 /* Challenge input section */

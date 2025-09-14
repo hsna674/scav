@@ -34,30 +34,43 @@ class ChallengeAdminForm(forms.ModelForm):
         cleaned_data = super().clean()
         challenge_type = cleaned_data.get("challenge_type")
         required_challenges = cleaned_data.get("required_challenges")
+        required_challenges_count = cleaned_data.get("required_challenges_count")
 
-        # Only validate required_challenges for unlocking type
-        if challenge_type == "unlocking" and required_challenges:
-            # Check for circular dependencies
-            def would_create_cycle(challenge, required_challenges_list):
-                """Check if adding these required challenges would create a dependency cycle"""
-                for req_challenge in required_challenges_list:
-                    if req_challenge == challenge:
-                        return True
-                    # Check if req_challenge depends on challenge (directly or indirectly)
-                    if req_challenge.is_unlocking:
-                        req_deps = list(req_challenge.required_challenges.all())
-                        if challenge in req_deps or would_create_cycle(
-                            challenge, req_deps
-                        ):
+        # Only validate for unlocking type
+        if challenge_type == "unlocking":
+            if required_challenges:
+                # Check for circular dependencies
+                def would_create_cycle(challenge, required_challenges_list):
+                    """Check if adding these required challenges would create a dependency cycle"""
+                    for req_challenge in required_challenges_list:
+                        if req_challenge == challenge:
                             return True
-                return False
+                        # Check if req_challenge depends on challenge (directly or indirectly)
+                        if req_challenge.is_unlocking:
+                            req_deps = list(req_challenge.required_challenges.all())
+                            if challenge in req_deps or would_create_cycle(
+                                challenge, req_deps
+                            ):
+                                return True
+                    return False
 
-            if self.instance and would_create_cycle(
-                self.instance, list(required_challenges)
-            ):
-                raise forms.ValidationError(
-                    "The selected required challenges would create a circular dependency."
-                )
+                if self.instance and would_create_cycle(
+                    self.instance, list(required_challenges)
+                ):
+                    raise forms.ValidationError(
+                        "The selected required challenges would create a circular dependency."
+                    )
+
+            # Validate required_challenges_count
+            if required_challenges_count is not None and required_challenges_count > 0:
+                if not required_challenges:
+                    raise forms.ValidationError(
+                        "You must select required challenges if specifying a required count."
+                    )
+                elif required_challenges_count > len(required_challenges):
+                    raise forms.ValidationError(
+                        f"Required challenges count ({required_challenges_count}) cannot be greater than the number of selected challenges ({len(required_challenges)})."
+                    )
 
         return cleaned_data
 
@@ -74,6 +87,7 @@ class ChallengeAdmin(admin.ModelAdmin):
         "decay_percentage",
         "category",
         "required_challenges",
+        "required_challenges_count",
         "unblocked",
     )
     list_display = (
@@ -107,6 +121,11 @@ class ChallengeAdmin(admin.ModelAdmin):
             form.base_fields[
                 "required_challenges"
             ].help_text = "Hold Ctrl (or Cmd on Mac) to select multiple challenges that must be completed before this unlocking challenge becomes available. Only challenges from the same category are shown. (Only applies to 'Unlocking' type)"
+
+        if "required_challenges_count" in form.base_fields:
+            form.base_fields[
+                "required_challenges_count"
+            ].help_text = "How many of the selected required challenges must be completed to unlock this challenge. Leave as 0 to require all selected challenges. (Only applies to 'Unlocking' type)"
 
         return form
 

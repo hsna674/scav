@@ -66,6 +66,10 @@ class Challenge(models.Model):
         related_name="unlocks",
         help_text="Challenges that must be completed before this unlocking challenge becomes available (only applies to 'Unlocking' type)",
     )
+    required_challenges_count = models.PositiveIntegerField(
+        default=0,
+        help_text="Number of required challenges that must be completed to unlock this challenge. If 0 or equal to total required challenges, all must be completed. (Only applies to 'Unlocking' type)",
+    )
 
     class Meta:
         ordering = ["category", "order", "id"]
@@ -147,7 +151,7 @@ class Challenge(models.Model):
         if not self.is_unlocking:
             return True
 
-        # For unlocking challenges, check if all required challenges are completed
+        # For unlocking challenges, check if required number of challenges are completed
         try:
             class_obj = Class.objects.get(year=str(class_year))
             required_challenge_ids = set(
@@ -156,7 +160,24 @@ class Challenge(models.Model):
             completed_challenge_ids = set(
                 class_obj.challenges_completed.values_list("id", flat=True)
             )
-            return required_challenge_ids.issubset(completed_challenge_ids)
+
+            # Count how many required challenges have been completed
+            completed_required_count = len(
+                required_challenge_ids.intersection(completed_challenge_ids)
+            )
+
+            # Determine how many challenges need to be completed
+            if (
+                self.required_challenges_count == 0
+                or self.required_challenges_count >= len(required_challenge_ids)
+            ):
+                # If count is 0 or >= total required, all must be completed (original behavior)
+                needed_count = len(required_challenge_ids)
+            else:
+                # Use the specified count
+                needed_count = self.required_challenges_count
+
+            return completed_required_count >= needed_count
         except Class.DoesNotExist:
             return False
         except Exception:

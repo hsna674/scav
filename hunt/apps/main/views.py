@@ -105,18 +105,41 @@ def index(request):
                 elif c.is_unlocking and not c.is_available_for_class(
                     request.user.graduation_year
                 ):
-                    # Check which required challenges are missing
+                    # Calculate completion status for partial requirements
                     required_challenge_ids = set(
                         c.required_challenges.values_list("id", flat=True)
                     )
                     completed_challenge_ids = set(completed_ids)
-                    missing_challenges = c.required_challenges.filter(
-                        id__in=required_challenge_ids - completed_challenge_ids
+                    completed_required_count = len(
+                        required_challenge_ids.intersection(completed_challenge_ids)
                     )
+
+                    # Determine how many challenges need to be completed
+                    if (
+                        c.required_challenges_count == 0
+                        or c.required_challenges_count >= len(required_challenge_ids)
+                    ):
+                        needed_count = len(required_challenge_ids)
+                    else:
+                        needed_count = c.required_challenges_count
+
+                    # Get all required challenges and their completion status
+                    required_challenges_info = []
+                    for req_challenge in c.required_challenges.all():
+                        is_completed = req_challenge.id in completed_challenge_ids
+                        required_challenges_info.append(
+                            {"challenge": req_challenge, "completed": is_completed}
+                        )
+
                     challenges_dict[c.id] = [
                         c,
                         "prerequisite_not_met",
-                        list(missing_challenges),
+                        {
+                            "required_challenges": required_challenges_info,
+                            "completed_count": completed_required_count,
+                            "needed_count": needed_count,
+                            "total_count": len(required_challenge_ids),
+                        },
                     ]
                 else:
                     if c.is_decreasing:
