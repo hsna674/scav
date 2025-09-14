@@ -219,6 +219,11 @@ body.dark-mode .challenge-box:hover {
     opacity: 0.7;
 }
 
+.challenge-box.prerequisite-not-met {
+    border-left: 4px solid #f59e0b;
+    opacity: 0.8;
+}
+
 /* Challenge header */
 .challenge-header {
     text-align: center;
@@ -325,6 +330,34 @@ body.dark-mode .challenge-description a:hover {
 
 .challenge-status-text.locked {
     color: #ef4444;
+}
+
+/* Required challenges list */
+.required-challenges-list {
+    margin: 12px 0 0 0;
+    padding: 0;
+    list-style: none;
+    background: rgba(249, 115, 22, 0.1);
+    border-radius: 6px;
+    padding: 8px 12px;
+    border-left: 3px solid #f59e0b;
+}
+
+.required-challenges-list li {
+    color: #92400e;
+    font-size: 0.85rem;
+    margin: 2px 0;
+    padding: 2px 0;
+    text-align: center;
+}
+
+body.dark-mode .required-challenges-list {
+    background: rgba(245, 158, 11, 0.15);
+    border-left-color: #fbbf24;
+}
+
+body.dark-mode .required-challenges-list li {
+    color: #fbbf24;
 }
 
 /* Challenge input section */

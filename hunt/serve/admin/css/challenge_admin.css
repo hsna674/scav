@@ -1,0 +1,31 @@
+/* Hide required challenges field by default */
+.field-required_challenges {
+    display: none !important;
+}
+
+/* Show required challenges field when unlocking type is selected */
+body.unlocking-challenge-type .field-required_challenges {
+    display: block !important;
+}
+
+/* Style the multiple select for required challenges */
+body.unlocking-challenge-type .field-required_challenges select {
+    min-height: 120px;
+    width: 100%;
+}
+
+/* Add help text styling */
+body.unlocking-challenge-type .field-required_challenges .help {
+    font-style: italic;
+    color: #666;
+    margin-top: 5px;
+}
+
+/* Keep decay percentage behavior for decreasing challenges */
+.field-decay_percentage {
+    display: none !important;
+}
+
+body.decreasing-challenge-type .field-decay_percentage {
+    display: block !important;
+}

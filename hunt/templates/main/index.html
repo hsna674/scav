@@ -283,7 +283,7 @@ document.addEventListener("DOMContentLoaded", function () {
         
         <div id="c-{{ category.id }}" class="challenges-grid">
             {% for challenge, status in challenges.items %}
-            <div id="box{{ status.0.id }}" class="challenge-box {% if status.1 == 'available' %}available{% elif status.1 == 'completed' %}completed{% else %}locked{% endif %}{% if request.user.is_staff %} admin-clickable{% endif %}"
+            <div id="box{{ status.0.id }}" class="challenge-box {% if status.1 == 'available' %}available{% elif status.1 == 'completed' %}completed{% elif status.1 == 'prerequisite_not_met' %}prerequisite-not-met{% else %}locked{% endif %}{% if request.user.is_staff %} admin-clickable{% endif %}"
                 {% if request.user.is_staff %}
                     data-admin-url="{% url 'admin:main_challenge_change' status.0.id %}"
                     title="Edit this challenge"
@@ -320,11 +320,22 @@ document.addEventListener("DOMContentLoaded", function () {
                     {% elif status.1 == 'locked' %}
                         <p class="challenge-description">{{ status.0.short_description|linkify }}</p>
                         <p class="challenge-description">This challenge was exclusive and has already been completed by another class.</p>
+                    {% elif status.1 == 'prerequisite_not_met' %}
+                        <p class="challenge-description">This challenge requires completing other challenges first.</p>
+                        <p class="challenge-description">Required challenges:</p>
+                        <ul class="required-challenges-list">
+                            {% for required_challenge in status.2 %}
+                                <li>{{ required_challenge.name }}</li>
+                            {% endfor %}
+                        </ul>
                     {% elif status.0.is_exclusive %}
                         <p class="challenge-description">This challenge's points are only available to the first class to complete it.</p>
                         <p class="challenge-description">{{ status.0.short_description|linkify }}</p>
                     {% elif status.0.is_decreasing %}
                         <p class="challenge-description">This challenge's points decrease each time a class completes it.</p>
+                        <p class="challenge-description">{{ status.0.short_description|linkify }}</p>
+                    {% elif status.0.is_unlocking %}
+                        <p class="challenge-description">This challenge unlocks after completing prerequisite challenges.</p>
                         <p class="challenge-description">{{ status.0.short_description|linkify }}</p>
                     {% else %}
                         <p class="challenge-description">{{ status.0.short_description|linkify }}</p>

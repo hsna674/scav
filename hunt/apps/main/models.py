@@ -25,6 +25,7 @@ class Challenge(models.Model):
         ("normal", "Normal"),
         ("exclusive", "Exclusive"),
         ("decreasing", "Decreasing"),
+        ("unlocking", "Unlocking"),
     ]
 
     id = models.AutoField(primary_key=True, null=False, blank=False)
@@ -36,7 +37,7 @@ class Challenge(models.Model):
         max_length=20,
         choices=CHALLENGE_TYPE_CHOICES,
         default="normal",
-        help_text="Normal: Standard challenge. Exclusive: Only one class can solve. Decreasing: Points decrease after each class solves it.",
+        help_text="Normal: Standard challenge. Exclusive: Only one class can solve. Decreasing: Points decrease after each class solves it. Unlocking: Requires other challenges to be completed first.",
     )
     exclusive = models.BooleanField(
         default=False, help_text="Deprecated: Use challenge_type instead"
@@ -57,6 +58,13 @@ class Challenge(models.Model):
         blank=True,
         related_name="challenges",
         on_delete=models.SET_NULL,
+    )
+    required_challenges = models.ManyToManyField(
+        "self",
+        blank=True,
+        symmetrical=False,
+        related_name="unlocks",
+        help_text="Challenges that must be completed before this unlocking challenge becomes available (only applies to 'Unlocking' type)",
     )
 
     class Meta:
@@ -96,6 +104,11 @@ class Challenge(models.Model):
         """Check if challenge has decreasing points"""
         return self.challenge_type == "decreasing"
 
+    @property
+    def is_unlocking(self):
+        """Check if challenge is unlocking type"""
+        return self.challenge_type == "unlocking"
+
     def _completed_classes_count(self) -> int:
         """Return the number of distinct classes that have completed this challenge.
         Uses ChallengeCompletion to avoid M2M timing issues.
@@ -128,6 +141,26 @@ class Challenge(models.Model):
     def get_current_points(self):
         """Get the current point value for the next class to solve (same as get_points_for_class)."""
         return self.get_points_for_class(None)
+
+    def is_available_for_class(self, class_year):
+        """Check if this challenge is available for a specific class"""
+        if not self.is_unlocking:
+            return True
+
+        # For unlocking challenges, check if all required challenges are completed
+        try:
+            class_obj = Class.objects.get(year=str(class_year))
+            required_challenge_ids = set(
+                self.required_challenges.values_list("id", flat=True)
+            )
+            completed_challenge_ids = set(
+                class_obj.challenges_completed.values_list("id", flat=True)
+            )
+            return required_challenge_ids.issubset(completed_challenge_ids)
+        except Class.DoesNotExist:
+            return False
+        except Exception:
+            return True  # Fallback to available if there's an error
 
 
 class Class(models.Model):

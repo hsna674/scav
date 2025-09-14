@@ -102,6 +102,22 @@ def index(request):
                     challenges_dict[c.id] = [c, "completed"]
                 elif c.locked:
                     challenges_dict[c.id] = [c, "locked"]
+                elif c.is_unlocking and not c.is_available_for_class(
+                    request.user.graduation_year
+                ):
+                    # Check which required challenges are missing
+                    required_challenge_ids = set(
+                        c.required_challenges.values_list("id", flat=True)
+                    )
+                    completed_challenge_ids = set(completed_ids)
+                    missing_challenges = c.required_challenges.filter(
+                        id__in=required_challenge_ids - completed_challenge_ids
+                    )
+                    challenges_dict[c.id] = [
+                        c,
+                        "prerequisite_not_met",
+                        list(missing_challenges),
+                    ]
                 else:
                     if c.is_decreasing:
                         # OPTIMIZATION: Use pre-calculated completion count instead of querying database
@@ -194,7 +210,10 @@ def validate_flag(request):
         )
 
         if is_correct:
-            if not challenge.locked:
+            if not challenge.locked and (
+                not challenge.is_unlocking
+                or challenge.is_available_for_class(request.user.graduation_year)
+            ):
                 # Optimize: Check both user completion and class completion in single queries
                 user_already_completed = request.user.challenges_done.filter(
                     id=challenge.id
@@ -291,7 +310,7 @@ def validate_flag(request):
                         activity_log.details["points_awarded"] = points_awarded
                         activity_log.save()
             else:
-                # Challenge is locked, no points
+                # Challenge is locked or prerequisites not met, no points
                 points_awarded = 0
                 if submission:
                     submission.points_awarded = points_awarded
