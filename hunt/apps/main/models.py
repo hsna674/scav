@@ -61,6 +61,12 @@ class Challenge(models.Model):
 
     class Meta:
         ordering = ["category", "order", "id"]
+        indexes = [
+            models.Index(
+                fields=["category", "order"], name="challenge_category_order_idx"
+            ),
+            models.Index(fields=["challenge_type"], name="challenge_type_idx"),
+        ]
 
     def __str__(self):
         return "{} ({})".format(self.name, self.id)

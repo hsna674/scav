@@ -5,7 +5,7 @@ from django.contrib.auth.models import UserManager as DjangoUserManager
 from django.db import models
 from django.utils import timezone as tz
 
-from ..main.models import Challenge, Class
+from ..main.models import Challenge
 
 logger = logging.getLogger(__name__)
 
@@ -81,6 +81,11 @@ class User(AbstractBaseUser):
 
     def is_participant(self):
         return self.is_student and not self.is_superuser
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["graduation_year"], name="user_graduation_year_idx"),
+        ]
 
 
 class Group(models.Model):
