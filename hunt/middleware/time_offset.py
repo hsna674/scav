@@ -26,6 +26,9 @@ class TimeOffsetMiddleware:
         self.sync_interval = 300  # 5 minutes
         self.lock = threading.Lock()
 
+        # Set a default 5-minute offset immediately for production server timing issues
+        self.time_offset = timedelta(minutes=5)
+
         # Override timezone.now immediately, not on first request
         if not hasattr(timezone, "_original_now"):
             timezone._original_now = timezone.now
@@ -35,8 +38,11 @@ class TimeOffsetMiddleware:
                 return timezone._original_now() + self.time_offset
 
             timezone.now = corrected_now
+            logger.info(
+                f"Time correction middleware initialized with default {self.time_offset.total_seconds():.2f}s offset"
+            )
 
-        # Initial sync after setting up the override
+        # Initial sync after setting up the override (will refine the offset)
         self._sync_time_offset()
 
     def _get_world_time(self):
@@ -67,12 +73,16 @@ class TimeOffsetMiddleware:
             # Try API sources first
             for source in api_sources:
                 try:
-                    response = requests.get(source["url"], timeout=5)
+                    response = requests.get(source["url"], timeout=3)
                     if response.status_code == 200:
                         data = response.json()
-                        return source["parser"](data)
+                        world_time = source["parser"](data)
+                        logger.debug(
+                            f"Time sync successful from {source['url']}: {world_time}"
+                        )
+                        return world_time
                 except Exception as e:
-                    logger.warning(f"Time sync failed for {source['url']}: {e}")
+                    logger.debug(f"Time sync failed for {source['url']}: {e}")
                     continue
 
             # Fallback: use HTTP date headers from reliable sites
@@ -87,12 +97,16 @@ class TimeOffsetMiddleware:
 
             for site in fallback_sites:
                 try:
-                    response = requests.head(site, timeout=3)
+                    response = requests.head(site, timeout=2)
                     date_header = response.headers.get("Date")
                     if date_header:
-                        return parsedate_to_datetime(date_header)
+                        world_time = parsedate_to_datetime(date_header)
+                        logger.debug(
+                            f"Time sync successful from HTTP headers {site}: {world_time}"
+                        )
+                        return world_time
                 except Exception as e:
-                    logger.warning(f"HTTP date fallback failed for {site}: {e}")
+                    logger.debug(f"HTTP date fallback failed for {site}: {e}")
                     continue
 
         except Exception as e:
@@ -134,20 +148,23 @@ class TimeOffsetMiddleware:
                         f"Time sync rejected - offset change too large: {new_offset.total_seconds():.2f}s (current: {self.time_offset.total_seconds():.2f}s)"
                     )
             else:
-                # If this is the very first sync and it fails, use a reasonable default
+                # If this is the very first sync and it fails, keep the default offset
                 if self.last_sync == 0:
                     logger.warning(
-                        "Initial time sync failed, using 5-minute default offset"
+                        f"Initial time sync failed, keeping default offset: {self.time_offset.total_seconds():.2f}s"
                     )
-                    self.time_offset = timedelta(minutes=5)
                     self.last_sync = time.time()
                 else:
-                    logger.warning("Time sync failed, keeping previous offset")
+                    logger.warning(
+                        f"Time sync failed, keeping previous offset: {self.time_offset.total_seconds():.2f}s"
+                    )
         except Exception as e:
             logger.error(f"Time sync error: {e}")
-            # Fallback for first sync
+            # Fallback for first sync - keep the default offset
             if self.last_sync == 0:
-                self.time_offset = timedelta(minutes=5)
+                logger.warning(
+                    f"Time sync error on first sync, keeping default offset: {self.time_offset.total_seconds():.2f}s"
+                )
                 self.last_sync = time.time()
 
     def __call__(self, request):

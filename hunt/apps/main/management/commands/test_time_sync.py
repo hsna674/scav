@@ -146,6 +146,23 @@ class Command(BaseCommand):
         if time_middleware in middleware_list:
             position = middleware_list.index(time_middleware)
             self.stdout.write(f"Time offset middleware loaded at position {position}")
+
+            # Try to access the middleware instance to check its current state
+            try:
+                original_now = getattr(timezone, "_original_now", None)
+                if original_now:
+                    current_corrected = timezone.now()
+                    current_original = original_now()
+                    current_offset = current_corrected - current_original
+                    self.stdout.write(
+                        f"Current middleware offset: {current_offset.total_seconds():.2f} seconds"
+                    )
+                else:
+                    self.stdout.write(
+                        "timezone._original_now not found - middleware may not be initialized"
+                    )
+            except Exception as e:
+                self.stdout.write(f"Error checking middleware state: {e}")
         else:
             self.stdout.write(
                 self.style.ERROR("Time offset middleware not found in MIDDLEWARE")
