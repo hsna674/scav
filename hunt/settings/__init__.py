@@ -54,6 +54,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "hunt.middleware.time_offset.TimeOffsetMiddleware",  # TEMPORARY: Remove when hosting fixes time
     "hunt.middleware.no_cache.NoCacheMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
