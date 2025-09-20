@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from django.contrib.auth import get_user_model
+from .fields import CorrectedDateTimeField
 
 User = get_user_model()
 
@@ -22,7 +23,7 @@ class ActivityLog(models.Model):
         User, on_delete=models.CASCADE, related_name="activity_logs"
     )
     activity_type = models.CharField(max_length=20, choices=ActivityType.choices)
-    timestamp = models.DateTimeField(default=timezone.now)
+    timestamp = CorrectedDateTimeField(default=timezone.now)
     ip_address = models.GenericIPAddressField(null=True, blank=True)
     user_agent = models.TextField(blank=True)
 
@@ -53,7 +54,7 @@ class FlagSubmission(models.Model):
     )
     submitted_flag = models.CharField(max_length=1024)
     is_correct = models.BooleanField()
-    timestamp = models.DateTimeField(default=timezone.now)
+    timestamp = CorrectedDateTimeField(default=timezone.now)
     ip_address = models.GenericIPAddressField(null=True, blank=True)
 
     # Points awarded (0 if incorrect or already completed)
@@ -92,7 +93,7 @@ class ChallengeCompletion(models.Model):
         "main.Challenge", on_delete=models.CASCADE, related_name="completions"
     )
     class_year = models.CharField(max_length=20)  # Store the class year when completed
-    timestamp = models.DateTimeField(default=timezone.now)
+    timestamp = CorrectedDateTimeField(default=timezone.now)
     points_earned = models.IntegerField()
 
     # Track if this was the first completion for the class
