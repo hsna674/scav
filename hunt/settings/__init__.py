@@ -95,7 +95,7 @@ WSGI_APPLICATION = "hunt.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
+        "ENGINE": "hunt.db_backends.sqlite_corrected",
         "NAME": BASE_DIR / "db.sqlite3",
     }
 }

@@ -6,6 +6,7 @@ from django.db import models
 from django.utils import timezone as tz
 
 from ..main.models import Challenge
+from ..logging.fields import CorrectedDateTimeField
 
 logger = logging.getLogger(__name__)
 
@@ -38,9 +39,9 @@ class User(AbstractBaseUser):
         Challenge, related_name="users_that_completed", blank=True
     )
 
-    last_submission_time = models.DateTimeField(default=tz.now)
+    last_submission_time = CorrectedDateTimeField(default=tz.now)
 
-    date_joined = models.DateTimeField(auto_now_add=True)
+    date_joined = CorrectedDateTimeField(auto_now_add=True)
 
     def has_perm(self, perm, obj=None) -> bool:  # pylint: disable=unused-argument
         return self.is_superuser

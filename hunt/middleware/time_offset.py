@@ -26,9 +26,6 @@ class TimeOffsetMiddleware:
         self.sync_interval = 300  # 5 minutes
         self.lock = threading.Lock()
 
-        # Initial sync
-        self._sync_time_offset()
-
         # Override timezone.now immediately, not on first request
         if not hasattr(timezone, "_original_now"):
             timezone._original_now = timezone.now
@@ -38,6 +35,9 @@ class TimeOffsetMiddleware:
                 return timezone._original_now() + self.time_offset
 
             timezone.now = corrected_now
+
+        # Initial sync after setting up the override
+        self._sync_time_offset()
 
     def _get_world_time(self):
         """Get current UTC time from world time API"""
@@ -105,20 +105,33 @@ class TimeOffsetMiddleware:
         try:
             world_time = self._get_world_time()
             if world_time:
-                local_time = timezone.now()
+                # Use the original (non-corrected) time for calculating offset
+                local_time = (
+                    timezone._original_now()
+                    if hasattr(timezone, "_original_now")
+                    else timezone.now()
+                )
+
+                # Ensure both times are timezone-aware and comparable
+                if world_time.tzinfo is None:
+                    world_time = world_time.replace(tzinfo=local_time.tzinfo)
+                elif local_time.tzinfo is None:
+                    local_time = local_time.replace(tzinfo=world_time.tzinfo)
+
                 # Calculate offset (positive means local time is behind)
-                new_offset = world_time.replace(tzinfo=local_time.tzinfo) - local_time
+                new_offset = world_time - local_time
 
                 # Only update if the change is reasonable (< 1 hour difference from previous)
                 if abs((new_offset - self.time_offset).total_seconds()) < 3600:
+                    old_offset = self.time_offset.total_seconds()
                     self.time_offset = new_offset
                     self.last_sync = time.time()
                     logger.info(
-                        f"Time sync successful. Offset: {self.time_offset.total_seconds():.2f} seconds"
+                        f"Time sync successful. Offset changed from {old_offset:.2f}s to {self.time_offset.total_seconds():.2f}s"
                     )
                 else:
                     logger.warning(
-                        f"Time sync rejected - offset change too large: {new_offset.total_seconds():.2f}s"
+                        f"Time sync rejected - offset change too large: {new_offset.total_seconds():.2f}s (current: {self.time_offset.total_seconds():.2f}s)"
                     )
             else:
                 # If this is the very first sync and it fails, use a reasonable default
