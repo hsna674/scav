@@ -5,6 +5,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const requiredChallengesCountField = document.querySelector('.field-required_challenges_count');
     const categoryField = document.querySelector('#id_category');
     const requiredChallengesSelect = document.querySelector('#id_required_challenges');
+    const timedReleaseField = document.querySelector('#id_timed_release');
+    const releaseTimeField = document.querySelector('.field-release_time');
     
     console.log('Challenge admin JS loaded'); // Debug
     console.log('Fields found:', {
@@ -12,7 +14,9 @@ document.addEventListener('DOMContentLoaded', function() {
         requiredChallenges: !!requiredChallengesField,
         requiredChallengesCount: !!requiredChallengesCountField,
         category: !!categoryField,
-        select: !!requiredChallengesSelect
+        select: !!requiredChallengesSelect,
+        timedRelease: !!timedReleaseField,
+        releaseTime: !!releaseTimeField
     });
     
     function toggleConditionalFields() {
@@ -29,6 +33,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.body.classList.add('unlocking-challenge-type');
                 console.log('Showing required challenges field'); // Debug
                 filterRequiredChallenges(); // Filter when showing
+            }
+        }
+    }
+    
+    function toggleTimedReleaseFields() {
+        console.log('Toggling timed release, current value:', timedReleaseField?.checked); // Debug
+        
+        if (timedReleaseField) {
+            // Remove timed release class
+            document.body.classList.remove('timed-release-enabled');
+            
+            // Add class if timed release is checked
+            if (timedReleaseField.checked) {
+                document.body.classList.add('timed-release-enabled');
+                console.log('Showing release time field'); // Debug
             }
         }
     }
@@ -110,6 +129,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initial state
     console.log('Setting initial state'); // Debug
     toggleConditionalFields();
+    toggleTimedReleaseFields();
     
     // If page loads with category already selected and unlocking type, filter immediately
     if (challengeTypeField && challengeTypeField.value === 'unlocking' && categoryField && categoryField.value) {
@@ -124,5 +144,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (categoryField) {
         categoryField.addEventListener('change', filterRequiredChallenges);
+    }
+    
+    if (timedReleaseField) {
+        timedReleaseField.addEventListener('change', toggleTimedReleaseFields);
     }
 });

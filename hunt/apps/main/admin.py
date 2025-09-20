@@ -3,8 +3,42 @@ from django.utils.html import format_html
 from django.urls import reverse, path
 from django import forms
 from django.http import JsonResponse
+from django.utils import timezone
+from django.db.models import Q
 
 from .models import Challenge, Class, Category
+
+
+class ReleaseStatusFilter(admin.SimpleListFilter):
+    title = "release status"
+    parameter_name = "release_status"
+
+    def lookups(self, request, model_admin):
+        return (
+            ("released", "Released"),
+            ("scheduled", "Scheduled (Timed)"),
+            ("not_released", "Not Released"),
+        )
+
+    def queryset(self, request, queryset):
+        now = timezone.now()
+        if self.value() == "released":
+            return queryset.filter(
+                Q(unblocked=True) | Q(timed_release=True, release_time__lte=now)
+            )
+        elif self.value() == "scheduled":
+            return queryset.filter(
+                timed_release=True, release_time__gt=now, unblocked=False
+            )
+        elif self.value() == "not_released":
+            return queryset.filter(
+                Q(unblocked=False)
+                & (
+                    Q(timed_release=False)
+                    | Q(release_time__isnull=True)
+                    | Q(release_time__gt=now)
+                )
+            )
 
 
 class ChallengeAdminForm(forms.ModelForm):
@@ -72,6 +106,15 @@ class ChallengeAdminForm(forms.ModelForm):
                         f"Required challenges count ({required_challenges_count}) cannot be greater than the number of selected challenges ({len(required_challenges)})."
                     )
 
+        # Validate timed release fields
+        timed_release = cleaned_data.get("timed_release")
+        release_time = cleaned_data.get("release_time")
+
+        if timed_release and not release_time:
+            raise forms.ValidationError(
+                "Release time must be specified when timed release is enabled."
+            )
+
         return cleaned_data
 
 
@@ -89,19 +132,23 @@ class ChallengeAdmin(admin.ModelAdmin):
         "required_challenges",
         "required_challenges_count",
         "unblocked",
+        "timed_release",
+        "release_time",
     )
     list_display = (
         "name",
         "points",
-        "challenge_type",
-        "decay_percentage",
-        "unblocked",
+        "challenge_type_display",
+        "release_status",
         "locked",
         "category",
         "submissions_link",
     )
-    list_filter = ("challenge_type", "unblocked", "locked", "category")
+    list_filter = ("challenge_type", ReleaseStatusFilter, "locked", "category")
+    list_editable = ("points",)
+    ordering = ("category", "order", "name")
     readonly_fields = ("locked",)
+    search_fields = ("name", "short_description")
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
@@ -127,6 +174,16 @@ class ChallengeAdmin(admin.ModelAdmin):
                 "required_challenges_count"
             ].help_text = "How many of the selected required challenges must be completed to unlock this challenge. Leave as 0 to require all selected challenges. (Only applies to 'Unlocking' type)"
 
+        if "timed_release" in form.base_fields:
+            form.base_fields[
+                "timed_release"
+            ].help_text = "Enable automatic release at a scheduled date and time"
+
+        if "release_time" in form.base_fields:
+            form.base_fields[
+                "release_time"
+            ].help_text = "Date and time when this challenge should be automatically released (only used if timed release is enabled)"
+
         return form
 
     class Media:
@@ -141,6 +198,55 @@ class ChallengeAdmin(admin.ModelAdmin):
         return "-"
 
     submissions_link.short_description = "Submissions"
+
+    def decay_percentage_display(self, obj):
+        """Show decay percentage only for decreasing challenges"""
+        if obj.challenge_type == "decreasing":
+            return f"{obj.decay_percentage}%"
+        return "-"
+
+    decay_percentage_display.short_description = "Decay %"
+    decay_percentage_display.admin_order_field = "decay_percentage"
+
+    def release_status(self, obj):
+        """Show release status combining manual and timed release"""
+        if obj.unblocked:
+            return format_html('<span style="color: green;">✓ Released</span>')
+        elif obj.timed_release and obj.release_time:
+            from django.utils import timezone
+
+            if timezone.now() >= obj.release_time:
+                return format_html(
+                    '<span style="color: green;">✓ Released (Timed)</span>'
+                )
+            else:
+                return format_html('<span style="color: orange;">⏰ Scheduled</span>')
+        else:
+            return format_html('<span style="color: red;">✗ Not Released</span>')
+
+    release_status.short_description = "Release Status"
+
+    def challenge_type_display(self, obj):
+        """Show challenge type with additional info for special types"""
+        type_display = obj.get_challenge_type_display()
+
+        if obj.challenge_type == "decreasing":
+            return f"{type_display} ({obj.decay_percentage}%)"
+        elif obj.challenge_type == "unlocking" and obj.required_challenges.exists():
+            count = obj.required_challenges.count()
+            needed = (
+                obj.required_challenges_count
+                if obj.required_challenges_count > 0
+                else count
+            )
+            return f"{type_display} ({needed}/{count})"
+        elif obj.challenge_type == "exclusive":
+            return f"{type_display}"
+        else:
+            return type_display
+
+    challenge_type_display.short_description = "Type"
+    challenge_type_display.admin_order_field = "challenge_type"
 
     def release_challenges(self, request, queryset):
         """Bulk action to release selected challenges"""

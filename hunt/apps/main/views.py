@@ -11,6 +11,7 @@ from django.conf import settings
 from django.views.decorators.http import require_POST
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.shortcuts import resolve_url
+from django.db.models import Q
 
 from .models import Challenge, Class, Category
 from .context_processors import is_hunt_active
@@ -95,7 +96,14 @@ def index(request):
             # Filter challenges to only include released ones (unless user is staff)
             challenges_qs = category.challenges.order_by("order", "id")
             if not request.user.is_staff:
-                challenges_qs = challenges_qs.filter(unblocked=True)
+                # For non-staff users, filter to only show released challenges
+                # This includes manually released (unblocked=True) or timed releases that have passed
+                from django.utils import timezone
+
+                now = timezone.now()
+                challenges_qs = challenges_qs.filter(
+                    Q(unblocked=True) | Q(timed_release=True, release_time__lte=now)
+                )
 
             for c in challenges_qs:
                 if c.id in completed_ids:
@@ -217,6 +225,24 @@ def validate_flag(request):
             Challenge, id=int(request.POST.get("challenge_id"))
         )
         flag = request.POST.get("flag", "")
+
+        # Check if challenge is released (for non-staff users)
+        if not request.user.is_staff:
+            from django.utils import timezone
+
+            now = timezone.now()
+            is_released = challenge.unblocked or (
+                challenge.timed_release
+                and challenge.release_time
+                and challenge.release_time <= now
+            )
+            if not is_released:
+                return JsonResponse(
+                    {
+                        "result": "error",
+                        "message": "This challenge is not yet available.",
+                    }
+                )
 
         # Compare flags case-insensitively and ignore surrounding whitespace
         is_correct = flag.strip().lower() == challenge.flag.strip().lower()
@@ -348,8 +374,11 @@ def validate_flag(request):
             if challenge.is_decreasing and points_awarded > 0:
                 # Recompute updated display values for all decreasing challenges
                 decreasing_challenges = {}
-                for ch in Challenge.objects.filter(
-                    challenge_type="decreasing", unblocked=True
+                from django.utils import timezone
+
+                now = timezone.now()
+                for ch in Challenge.objects.filter(challenge_type="decreasing").filter(
+                    Q(unblocked=True) | Q(timed_release=True, release_time__lte=now)
                 ):
                     decreasing_challenges[ch.id] = ch.get_current_points()
                 response["decreasing_challenges_update"] = decreasing_challenges

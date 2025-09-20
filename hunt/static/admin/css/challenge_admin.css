@@ -31,3 +31,13 @@ body.unlocking-challenge-type .field-required_challenges .help {
 body.decreasing-challenge-type .field-decay_percentage {
     display: block !important;
 }
+
+/* Hide release time field by default */
+.field-release_time {
+    display: none !important;
+}
+
+/* Show release time field when timed release is enabled */
+body.timed-release-enabled .field-release_time {
+    display: block !important;
+}

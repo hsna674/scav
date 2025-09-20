@@ -1,6 +1,7 @@
 from django.db import models
 from django.apps import apps
 from django.db.models import Sum, Max
+from django.utils import timezone
 
 
 class Category(models.Model):
@@ -69,6 +70,15 @@ class Challenge(models.Model):
     required_challenges_count = models.PositiveIntegerField(
         default=0,
         help_text="Number of required challenges that must be completed to unlock this challenge. If 0 or equal to total required challenges, all must be completed. (Only applies to 'Unlocking' type)",
+    )
+    timed_release = models.BooleanField(
+        default=False,
+        help_text="If enabled, this challenge will be automatically released at the specified date and time",
+    )
+    release_time = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Date and time when this challenge should be automatically released (only used if timed release is enabled)",
     )
 
     class Meta:
@@ -145,6 +155,19 @@ class Challenge(models.Model):
     def get_current_points(self):
         """Get the current point value for the next class to solve (same as get_points_for_class)."""
         return self.get_points_for_class(None)
+
+    def is_released(self):
+        """Check if this challenge is currently released (available to participants)"""
+        # If manually unblocked, it's released
+        if self.unblocked:
+            return True
+
+        # If timed release is enabled, check if the release time has passed
+        if self.timed_release and self.release_time:
+            return timezone.now() >= self.release_time
+
+        # Otherwise, not released
+        return False
 
     def is_available_for_class(self, class_year):
         """Check if this challenge is available for a specific class"""
