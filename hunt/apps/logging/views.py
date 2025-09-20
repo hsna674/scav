@@ -351,7 +351,7 @@ def real_time_activity(request):
     for activity in activities:
         activity_data.append(
             {
-                "timestamp": activity.timestamp.isoformat(),
+                "timestamp": timezone.localtime(activity.timestamp).isoformat(),
                 "user": activity.user.username if activity.user else "Anonymous",
                 "type": activity.get_activity_type_display(),
                 "details": activity.details,
@@ -389,7 +389,9 @@ def invalidate_submission(request, submission_id):
             "challenge_name": submission.challenge.name,
             "points_removed": submission.points_awarded,
             "submission_id": submission.id,
-            "submission_timestamp": submission.timestamp.isoformat(),
+            "submission_timestamp": timezone.localtime(
+                submission.timestamp
+            ).isoformat(),
         }
 
         challenge = submission.challenge
@@ -423,8 +425,6 @@ def invalidate_submission(request, submission_id):
                 challenge.save()
 
         # 4. Mark the submission as invalidated instead of deleting it
-        from django.utils import timezone
-
         submission.invalidated = True
         submission.invalidated_by = request.user
         submission.invalidated_at = timezone.now()

@@ -43,7 +43,7 @@ def send_first_blood_notification(user, challenge, class_year, points_earned):
         class_name = class_names.get(class_year, f"Class of {class_year}")
 
         # Format timestamp - use timezone-aware time
-        timestamp = timezone.now().strftime("%B %d, %Y at %I:%M %p")
+        timestamp = timezone.localtime(timezone.now()).strftime("%B %d, %Y at %I:%M %p")
 
         # Create the embed for rich formatting
         embed = {
@@ -147,7 +147,7 @@ def send_hunt_end_notification():
 
         # Format timestamp - use timezone-aware time
         hunt_year = getattr(settings, "HUNT_YEAR", timezone.now().year)
-        timestamp = timezone.now().strftime("%B %d, %Y at %I:%M %p")
+        timestamp = timezone.localtime(timezone.now()).strftime("%B %d, %Y at %I:%M %p")
 
         # Create the embed for rich formatting
         embed = {

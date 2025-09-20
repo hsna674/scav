@@ -39,7 +39,7 @@ def log_user_login(sender, request, user, **kwargs):
             user_agent=request.META.get("HTTP_USER_AGENT", ""),
             details={
                 "login_method": "oauth",  # Since you're using Ion OAuth
-                "timestamp": timezone.now().isoformat(),
+                "timestamp": timezone.localtime(timezone.now()).isoformat(),
             },
         )
     except Exception as e:
@@ -58,7 +58,7 @@ def log_user_logout(sender, request, user, **kwargs):
                 user_agent=request.META.get("HTTP_USER_AGENT", ""),
                 details={
                     "logout_method": "manual",
-                    "timestamp": timezone.now().isoformat(),
+                    "timestamp": timezone.localtime(timezone.now()).isoformat(),
                 },
             )
     except Exception as e:

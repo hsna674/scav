@@ -140,7 +140,7 @@ def log_admin_action(user, action, details=None, request=None):
             user_agent=request.META.get("HTTP_USER_AGENT", "") if request else "",
             details={
                 "action": action,
-                "timestamp": timezone.now().isoformat(),
+                "timestamp": timezone.localtime(timezone.now()).isoformat(),
                 **(details or {}),
             },
         )

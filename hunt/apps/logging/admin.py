@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from django.urls import reverse
+from django.utils import timezone
 from .models import ActivityLog, FlagSubmission, ChallengeCompletion
 
 
@@ -150,7 +151,9 @@ class FlagSubmissionAdmin(admin.ModelAdmin):
                     "challenge_name": submission.challenge.name,
                     "points_removed": submission.points_awarded,
                     "submission_id": submission.id,
-                    "submission_timestamp": submission.timestamp.isoformat(),
+                    "submission_timestamp": timezone.localtime(
+                        submission.timestamp
+                    ).isoformat(),
                 }
 
                 challenge = submission.challenge
@@ -197,8 +200,6 @@ class FlagSubmissionAdmin(admin.ModelAdmin):
                 )
 
                 # Mark the submission as invalidated instead of deleting it
-                from django.utils import timezone
-
                 submission.invalidated = True
                 submission.invalidated_by = request.user
                 submission.invalidated_at = timezone.now()
