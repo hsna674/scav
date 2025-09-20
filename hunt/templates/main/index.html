@@ -7,6 +7,7 @@
 <link rel='stylesheet' href="{% static 'css/index.css' %}">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <audio id="lose" src="{% static 'img/losing.mp3' %}"></audio>
+<audio id="correct" src="{% static 'img/correct.mp3' %}"></audio>
 <script>
     function checkFlag(challenge_id) {
         const input = $("#" + challenge_id);
@@ -27,6 +28,7 @@
             success: function (data) {
                 if (data.result == "success") {
                     const box = $("#box" + challenge_id);
+                    document.getElementById("correct").play();
                     box.removeClass("available").addClass("completed flash-green");
 
                     // Remove the animation class after it finishes so it can be re-triggered if needed
