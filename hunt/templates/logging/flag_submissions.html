@@ -101,7 +101,9 @@
                                         {% endif %}
                                     </td>
                                     <td>
-                                        {% if submission.is_correct %}
+                                        {% if submission.invalidated %}
+                                        <span class="badge badge-secondary">⚠ Invalidated</span>
+                                        {% elif submission.is_correct %}
                                         <span class="badge badge-success">✓ Correct</span>
                                         {% else %}
                                         <span class="badge badge-danger">✗ Incorrect</span>
@@ -119,7 +121,12 @@
                                     </td>
                                     <td><small class="text-muted">{{ submission.ip_address }}</small></td>
                                     <td>
-                                        {% if submission.is_correct and submission.points_awarded > 0 %}
+                                        {% if submission.invalidated %}
+                                            <small class="text-muted">
+                                                Invalidated by {{ submission.invalidated_by.username }}<br>
+                                                <span class="text-muted">{{ submission.invalidated_at|date:"M j, Y g:i A" }}</span>
+                                            </small>
+                                        {% elif submission.is_correct and submission.points_awarded > 0 %}
                                         <button class="btn btn-sm btn-danger" onclick="invalidateSubmission({{ submission.id }})">
                                             Invalidate
                                         </button>
@@ -185,7 +192,7 @@ $(document).ready(function() {
 
 <script>
 function invalidateSubmission(submissionId) {
-    if (!confirm('Are you sure you want to invalidate this submission? This will remove the completion and points from the user and class.')) {
+    if (!confirm('Are you sure you want to invalidate this submission? This will mark the submission as invalid and remove the points, but will keep the submission record for audit purposes.')) {
         return;
     }
     
@@ -199,16 +206,27 @@ function invalidateSubmission(submissionId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // Remove the row or update it to show invalidated status
+            // Update the row to show invalidation status instead of removing it
             const row = document.getElementById(`submission-${submissionId}`);
             if (row) {
-                // Update the points column to show invalidated
-                const pointsCell = row.cells[5];
-                pointsCell.innerHTML = '<span class="badge badge-secondary">Invalidated</span>';
+                // Update the Result column
+                const resultCell = row.children[5]; // Assuming Result is the 6th column (0-indexed)
+                if (resultCell) {
+                    resultCell.innerHTML = '<span class="badge badge-warning">⚠ Invalidated</span>';
+                }
                 
-                // Update the actions column
-                const actionsCell = row.cells[7];
-                actionsCell.innerHTML = 'Invalidated';
+                // Update the Actions column
+                const actionsCell = row.children[7]; // Assuming Actions is the 8th column (0-indexed)
+                if (actionsCell) {
+                    actionsCell.innerHTML = `<small class="text-muted">Invalidated by ${data.invalidated_by}<br><span class="text-muted">${data.invalidated_at}</span></small>`;
+                }
+                
+                // Add a brief highlight animation
+                row.style.transition = 'background-color 0.3s ease-out';
+                row.style.backgroundColor = '#fff3cd';
+                setTimeout(() => {
+                    row.style.backgroundColor = '';
+                }, 1000);
             }
             
             alert(data.message);
@@ -218,7 +236,7 @@ function invalidateSubmission(submissionId) {
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('An error occurred while invalidating the submission.');
+        alert('An error occurred while removing the submission.');
     });
 }
 

@@ -166,7 +166,9 @@
                                     </td>
                                     <td>{{ submission.user.graduation_year }}</td>
                                     <td>
-                                        {% if submission.is_correct %}
+                                        {% if submission.invalidated %}
+                                        <span class="badge badge-secondary">⚠ Invalidated</span>
+                                        {% elif submission.is_correct %}
                                         <span class="badge badge-success">✓ Correct</span>
                                         {% else %}
                                         <span class="badge badge-danger">✗ Incorrect</span>
@@ -184,7 +186,9 @@
                                     </td>
                                     <td><small class="text-muted">{{ submission.ip_address }}</small></td>
                                     <td>
-                                        {% if submission.is_correct and submission.points_awarded > 0 %}
+                                        {% if submission.invalidated %}
+                                        <small class="text-muted">Invalidated by {{ submission.invalidated_by.username }}</small>
+                                        {% elif submission.is_correct and submission.points_awarded > 0 %}
                                         <button class="btn btn-sm btn-danger" onclick="invalidateSubmission({{ submission.id }})">
                                             Invalidate
                                         </button>
@@ -250,7 +254,7 @@ $(document).ready(function() {
 
 <script>
 function invalidateSubmission(submissionId) {
-    if (!confirm('Are you sure you want to invalidate this submission? This will remove the completion and points from the user and class.')) {
+    if (!confirm('Are you sure you want to completely remove this submission? This will permanently delete the submission and remove the completion and points from the user and class. This action cannot be undone.')) {
         return;
     }
     
@@ -264,26 +268,36 @@ function invalidateSubmission(submissionId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // Remove the row or update it to show invalidated status
+            // Completely remove the row from the table
             const row = document.getElementById(`submission-${submissionId}`);
             if (row) {
-                // Update the points column to show invalidated
-                const pointsCell = row.cells[5];
-                pointsCell.innerHTML = '<span class="badge badge-secondary">Invalidated</span>';
+                // Add a fade-out animation
+                row.style.transition = 'opacity 0.3s ease-out';
+                row.style.opacity = '0';
                 
-                // Update the actions column
-                const actionsCell = row.cells[7];
-                actionsCell.innerHTML = 'Invalidated';
+                // Remove the row after animation
+                setTimeout(() => {
+                    row.remove();
+                    
+                    // Check if table is now empty
+                    const tbody = row.parentNode;
+                    if (tbody && tbody.children.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No submissions found</td></tr>';
+                    }
+                }, 300);
             }
             
             alert(data.message);
+            
+            // Optionally reload the page to refresh statistics
+            // location.reload();
         } else {
             alert('Error: ' + data.error);
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('An error occurred while invalidating the submission.');
+        alert('An error occurred while removing the submission.');
     });
 }
 </script>

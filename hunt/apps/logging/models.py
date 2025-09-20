@@ -59,6 +59,17 @@ class FlagSubmission(models.Model):
     # Points awarded (0 if incorrect or already completed)
     points_awarded = models.IntegerField(default=0)
 
+    # Track if this submission has been invalidated by admin
+    invalidated = models.BooleanField(default=False)
+    invalidated_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="invalidated_submissions",
+    )
+    invalidated_at = models.DateTimeField(null=True, blank=True)
+
     class Meta:
         ordering = ["-timestamp"]
         indexes = [

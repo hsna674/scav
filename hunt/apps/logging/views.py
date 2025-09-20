@@ -354,7 +354,7 @@ def export_data(request):
 
 @staff_or_committee_required
 def invalidate_submission(request, submission_id):
-    """Invalidate a single flag submission"""
+    """Completely remove/invalidate a flag submission and all related completion data"""
     if request.method != "POST":
         return JsonResponse({"error": "POST required"}, status=405)
 
@@ -366,55 +366,71 @@ def invalidate_submission(request, submission_id):
                 {"error": "Submission is not a valid completion"}, status=400
             )
 
-        # Find and remove the corresponding ChallengeCompletion
+        # Store details for logging before deletion
+        submission_details = {
+            "invalidated_user": submission.user.username,
+            "challenge_id": submission.challenge.id,
+            "challenge_name": submission.challenge.name,
+            "points_removed": submission.points_awarded,
+            "submission_id": submission.id,
+            "submission_timestamp": submission.timestamp.isoformat(),
+        }
+
+        challenge = submission.challenge
+        user = submission.user
+        class_year = str(user.graduation_year)
+
+        # 1. Remove from user's completed challenges
+        user.challenges_done.remove(challenge)
+
+        # 2. Find and delete the corresponding ChallengeCompletion
         try:
-            completion = ChallengeCompletion.objects.get(
-                user=submission.user, challenge=submission.challenge
-            )
+            completion = ChallengeCompletion.objects.get(user=user, challenge=challenge)
             completion.delete()
-
-            # Remove from user's completed challenges
-            submission.user.challenges_done.remove(submission.challenge)
-
-            # Remove from class completed challenges if no other completions exist
-            class_obj = Class.objects.get(year=str(submission.user.graduation_year))
-            other_completions = ChallengeCompletion.objects.filter(
-                challenge=submission.challenge,
-                class_year=submission.user.graduation_year,
-            ).exists()
-            if not other_completions:
-                class_obj.challenges_completed.remove(submission.challenge)
-
-                # If this was an exclusive challenge, unlock it
-                if submission.challenge.is_exclusive:
-                    submission.challenge.locked = False
-                    submission.challenge.save()
-
-            # Log the invalidation action
-            log_admin_action(
-                user=request.user,
-                action="invalidate_submission",
-                details={
-                    "invalidated_user": submission.user.username,
-                    "challenge_id": submission.challenge.id,
-                    "challenge_name": submission.challenge.name,
-                    "points_removed": submission.points_awarded,
-                    "submission_id": submission.id,
-                },
-                request=request,
-            )
-
         except ChallengeCompletion.DoesNotExist:
             pass
 
-        # Mark submission as invalidated
-        submission.points_awarded = 0
+        # 3. Check if class should still have this challenge as completed
+        class_obj = Class.objects.get(year=class_year)
+        other_class_completions = ChallengeCompletion.objects.filter(
+            challenge=challenge,
+            class_year=class_year,
+        ).exists()
+
+        if not other_class_completions:
+            # No other users from this class have completed it
+            class_obj.challenges_completed.remove(challenge)
+
+            # If this was an exclusive challenge, unlock it
+            if challenge.is_exclusive and challenge.locked:
+                challenge.locked = False
+                challenge.save()
+
+        # 4. Mark the submission as invalidated instead of deleting it
+        from django.utils import timezone
+
+        submission.invalidated = True
+        submission.invalidated_by = request.user
+        submission.invalidated_at = timezone.now()
+        submission.points_awarded = 0  # Remove points but keep the record
         submission.save()
+
+        # 5. Log the invalidation action
+        log_admin_action(
+            user=request.user,
+            action="invalidate_submission",
+            details=submission_details,
+            request=request,
+        )
 
         return JsonResponse(
             {
                 "success": True,
-                "message": f"Submission for {submission.challenge.name} by {submission.user.username} has been invalidated",
+                "message": f"Submission for {challenge.name} by {submission_details['invalidated_user']} has been invalidated",
+                "invalidated_by": request.user.username,
+                "invalidated_at": submission.invalidated_at.strftime(
+                    "%b %d, %Y %I:%M %p"
+                ),
             }
         )
 

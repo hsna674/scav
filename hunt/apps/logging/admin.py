@@ -64,12 +64,14 @@ class FlagSubmissionAdmin(admin.ModelAdmin):
         "timestamp",
         "user_link",
         "challenge_link",
-        "is_correct",
+        "submission_status",
         "points_awarded",
         "submitted_flag_preview",
+        "invalidation_info",
     )
     list_filter = (
         "is_correct",
+        "invalidated",
         "timestamp",
         "challenge__category",
         "user__graduation_year",
@@ -84,6 +86,9 @@ class FlagSubmissionAdmin(admin.ModelAdmin):
         "timestamp",
         "ip_address",
         "points_awarded",
+        "invalidated",
+        "invalidated_by",
+        "invalidated_at",
     )
     date_hierarchy = "timestamp"
 
@@ -109,60 +114,95 @@ class FlagSubmissionAdmin(admin.ModelAdmin):
 
     submitted_flag_preview.short_description = "Submitted Flag"
 
+    def submission_status(self, obj):
+        if obj.invalidated:
+            return format_html('<span style="color: orange;">⚠ Invalidated</span>')
+        elif obj.is_correct:
+            return format_html('<span style="color: green;">✓ Correct</span>')
+        else:
+            return format_html('<span style="color: red;">✗ Incorrect</span>')
+
+    submission_status.short_description = "Status"
+    submission_status.admin_order_field = "is_correct"
+
+    def invalidation_info(self, obj):
+        if obj.invalidated:
+            return format_html(
+                "By: {}<br>At: {}",
+                obj.invalidated_by.username if obj.invalidated_by else "Unknown",
+                obj.invalidated_at.strftime("%b %d, %Y %I:%M %p")
+                if obj.invalidated_at
+                else "Unknown",
+            )
+        return "-"
+
+    invalidation_info.short_description = "Invalidation Info"
+
     def invalidate_submissions(self, request, queryset):
-        """Admin action to invalidate flag submissions"""
+        """Admin action to completely remove flag submissions and related data"""
         count = 0
         for submission in queryset:
             if submission.is_correct and submission.points_awarded > 0:
-                # Find and remove the corresponding ChallengeCompletion
+                # Store details for logging before deletion
+                submission_details = {
+                    "invalidated_user": submission.user.username,
+                    "challenge_id": submission.challenge.id,
+                    "challenge_name": submission.challenge.name,
+                    "points_removed": submission.points_awarded,
+                    "submission_id": submission.id,
+                    "submission_timestamp": submission.timestamp.isoformat(),
+                }
+
+                challenge = submission.challenge
+                user = submission.user
+                class_year = str(user.graduation_year)
+
+                # Remove from user's completed challenges
+                user.challenges_done.remove(challenge)
+
+                # Find and delete the corresponding ChallengeCompletion
                 try:
                     completion = ChallengeCompletion.objects.get(
-                        user=submission.user, challenge=submission.challenge
+                        user=user, challenge=challenge
                     )
                     completion.delete()
-
-                    # Remove from user's completed challenges
-                    submission.user.challenges_done.remove(submission.challenge)
-
-                    # Remove from class completed challenges if no other completions exist
-                    from ..main.models import Class
-
-                    class_obj = Class.objects.get(
-                        year=str(submission.user.graduation_year)
-                    )
-                    other_completions = ChallengeCompletion.objects.filter(
-                        challenge=submission.challenge,
-                        class_year=submission.user.graduation_year,
-                    ).exists()
-                    if not other_completions:
-                        class_obj.challenges_completed.remove(submission.challenge)
-
-                        # If this was an exclusive challenge, unlock it
-                        if submission.challenge.is_exclusive:
-                            submission.challenge.locked = False
-                            submission.challenge.save()
-
-                    # Log the invalidation action
-                    from .utils import log_admin_action
-
-                    log_admin_action(
-                        user=request.user,
-                        action="invalidate_submission",
-                        details={
-                            "invalidated_user": submission.user.username,
-                            "challenge_id": submission.challenge.id,
-                            "challenge_name": submission.challenge.name,
-                            "points_removed": submission.points_awarded,
-                            "submission_id": submission.id,
-                        },
-                        request=request,
-                    )
-
                 except ChallengeCompletion.DoesNotExist:
                     pass
 
-                # Mark submission as invalidated
-                submission.points_awarded = 0
+                # Check if class should still have this challenge as completed
+                from ..main.models import Class
+
+                class_obj = Class.objects.get(year=class_year)
+                other_class_completions = ChallengeCompletion.objects.filter(
+                    challenge=challenge,
+                    class_year=class_year,
+                ).exists()
+
+                if not other_class_completions:
+                    class_obj.challenges_completed.remove(challenge)
+
+                    # If this was an exclusive challenge, unlock it
+                    if challenge.is_exclusive and challenge.locked:
+                        challenge.locked = False
+                        challenge.save()
+
+                # Log the invalidation action
+                from .utils import log_admin_action
+
+                log_admin_action(
+                    user=request.user,
+                    action="invalidate_submission",
+                    details=submission_details,
+                    request=request,
+                )
+
+                # Mark the submission as invalidated instead of deleting it
+                from django.utils import timezone
+
+                submission.invalidated = True
+                submission.invalidated_by = request.user
+                submission.invalidated_at = timezone.now()
+                submission.points_awarded = 0  # Remove points but keep the record
                 submission.save()
                 count += 1
 
@@ -173,7 +213,7 @@ class FlagSubmissionAdmin(admin.ModelAdmin):
         self.message_user(request, message)
 
     invalidate_submissions.short_description = (
-        "Invalidate selected submissions (remove points & completions)"
+        "Invalidate selected submissions (mark as invalid & remove completions)"
     )
 
     def has_add_permission(self, request):

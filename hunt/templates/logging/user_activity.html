@@ -79,7 +79,9 @@
                             <small class="text-muted">{{ submission.timestamp|date:"M d, H:i" }}</small>
                         </div>
                         <div class="text-right">
-                            {% if submission.is_correct %}
+                            {% if submission.invalidated %}
+                            <span class="badge badge-warning">⚠ Invalidated</span>
+                            {% elif submission.is_correct %}
                             <span class="badge badge-success">✓</span>
                             {% if submission.points_awarded > 0 %}
                             <span class="badge badge-primary">{{ submission.points_awarded }} pts</span>
