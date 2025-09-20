@@ -14,16 +14,11 @@ class DatabaseWrapper(SQLiteDatabaseWrapper):
         """Override connection to add time correction functions"""
         conn = super().get_new_connection(conn_params)
 
-        # Add custom SQL function to correct datetime('now') using middleware offset
+        # Add custom SQL function to correct datetime('now') using global time patch
         def corrected_now():
-            # Use Django's timezone.now() which includes the middleware offset
-            try:
-                corrected_time = timezone.now()
-                return corrected_time.strftime("%Y-%m-%d %H:%M:%S")
-            except Exception:
-                # Fallback to system time if middleware not available
-                now = datetime.datetime.utcnow()
-                return now.strftime("%Y-%m-%d %H:%M:%S")
+            # Use Django's timezone.now() which is globally patched for time correction
+            corrected_time = timezone.now()
+            return corrected_time.strftime("%Y-%m-%d %H:%M:%S")
 
         # Add custom SQL function for corrected datetime comparisons
         def corrected_datetime(date_str):
@@ -31,14 +26,10 @@ class DatabaseWrapper(SQLiteDatabaseWrapper):
             try:
                 # Parse the input datetime
                 dt = datetime.datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S")
-                # Get current corrected time to extract the offset
+                # Get the current offset from the global time correction
                 corrected_now_dt = timezone.now()
-                system_now_dt = (
-                    timezone._original_now()
-                    if hasattr(timezone, "_original_now")
-                    else corrected_now_dt
-                )
-                offset = corrected_now_dt - system_now_dt
+                original_now_dt = timezone._original_now()
+                offset = corrected_now_dt - original_now_dt
                 # Apply offset to the input datetime
                 corrected_dt = dt + offset
                 return corrected_dt.strftime("%Y-%m-%d %H:%M:%S")

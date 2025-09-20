@@ -12,6 +12,10 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 
 from pathlib import Path
 
+# Import timezone patch FIRST to ensure all timezone.now() calls use corrected time
+# This must happen before any models are loaded
+import hunt.timezone_patch  # noqa
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
