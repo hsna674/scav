@@ -20,4 +20,5 @@ urlpatterns = [
         name="invalidate_submission",
     ),
     path("switch-class/", views.switch_user_class, name="switch_user_class"),
+    path("timezone-diagnostic/", views.timezone_diagnostic, name="timezone_diagnostic"),
 ]

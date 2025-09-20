@@ -496,3 +496,92 @@ def switch_user_class(request):
     # Redirect back to dashboard with a small flag
     dashboard_url = f"{reverse('logging:dashboard')}?switched=1&to={new_year_int}"
     return redirect(dashboard_url)
+
+
+@staff_or_committee_required
+def timezone_diagnostic(request):
+    """Comprehensive timezone diagnostic for production debugging"""
+    import os
+    from django.db import connection
+    from django.conf import settings
+
+    now_django = timezone.now()
+
+    # Get database timezone
+    with connection.cursor() as cursor:
+        # For SQLite
+        if "sqlite" in settings.DATABASES["default"]["ENGINE"]:
+            cursor.execute("SELECT datetime('now');")
+            db_time_str = cursor.fetchone()[0]
+            # SQLite returns string, convert to datetime
+            from datetime import datetime
+
+            db_time = datetime.fromisoformat(db_time_str.replace(" ", "T"))
+        else:
+            # For PostgreSQL/MySQL
+            cursor.execute("SELECT NOW();")
+            db_time = cursor.fetchone()[0]
+
+    # Get latest activity to compare
+    latest_activity = ActivityLog.objects.order_by("-timestamp").first()
+
+    # System info
+    system_tz = os.environ.get("TZ", "Not set")
+
+    diagnostic_data = {
+        "django_settings": {
+            "TIME_ZONE": settings.TIME_ZONE,
+            "USE_TZ": settings.USE_TZ,
+        },
+        "system_info": {
+            "TZ_env_var": system_tz,
+        },
+        "times": {
+            "django_now_utc": now_django.isoformat(),
+            "django_now_local": timezone.localtime(now_django).isoformat(),
+            "database_now": str(db_time),
+            "django_timezone": str(timezone.get_current_timezone()),
+        },
+        "time_differences": {
+            "django_vs_db_seconds": (
+                now_django.replace(tzinfo=None) - db_time.replace(tzinfo=None)
+            ).total_seconds()
+            if hasattr(db_time, "replace")
+            else "N/A",
+        },
+    }
+
+    if latest_activity:
+        diagnostic_data["latest_activity"] = {
+            "timestamp_utc": latest_activity.timestamp.isoformat(),
+            "timestamp_local": timezone.localtime(
+                latest_activity.timestamp
+            ).isoformat(),
+            "age_seconds": (now_django - latest_activity.timestamp).total_seconds(),
+            "details_timestamp": latest_activity.details.get("timestamp")
+            if latest_activity.details
+            else None,
+        }
+
+    # Test creating a new activity log entry
+    test_log = ActivityLog.objects.create(
+        user=request.user,
+        activity_type="ADMIN_ACTION",
+        details={
+            "action": "timezone_diagnostic_test",
+            "timestamp": timezone.localtime(timezone.now()).isoformat(),
+            "test": True,
+        },
+    )
+
+    diagnostic_data["test_log"] = {
+        "created_timestamp_utc": test_log.timestamp.isoformat(),
+        "created_timestamp_local": timezone.localtime(test_log.timestamp).isoformat(),
+        "details_timestamp": test_log.details.get("timestamp"),
+        "immediate_age_seconds": (now_django - test_log.timestamp).total_seconds(),
+    }
+
+    # Clean up test log
+    test_log.delete()
+
+    return JsonResponse(diagnostic_data, json_dumps_params={"indent": 2})
