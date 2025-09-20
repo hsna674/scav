@@ -4,8 +4,8 @@ Discord utilities for first-blood notifications and hunt end notifications
 
 import logging
 import requests
-from datetime import datetime
 from django.conf import settings
+from django.utils import timezone
 
 logger = logging.getLogger(__name__)
 
@@ -42,8 +42,8 @@ def send_first_blood_notification(user, challenge, class_year, points_earned):
         }
         class_name = class_names.get(class_year, f"Class of {class_year}")
 
-        # Format timestamp
-        timestamp = datetime.now().strftime("%B %d, %Y at %I:%M %p")
+        # Format timestamp - use timezone-aware time
+        timestamp = timezone.now().strftime("%B %d, %Y at %I:%M %p")
 
         # Create the embed for rich formatting
         embed = {
@@ -145,9 +145,9 @@ def send_hunt_end_notification():
                 }
             )
 
-        # Format timestamp
-        hunt_year = getattr(settings, "HUNT_YEAR", datetime.now().year)
-        timestamp = datetime.now().strftime("%B %d, %Y at %I:%M %p")
+        # Format timestamp - use timezone-aware time
+        hunt_year = getattr(settings, "HUNT_YEAR", timezone.now().year)
+        timestamp = timezone.now().strftime("%B %d, %Y at %I:%M %p")
 
         # Create the embed for rich formatting
         embed = {
