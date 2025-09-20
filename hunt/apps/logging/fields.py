@@ -10,8 +10,8 @@ class CorrectedDateTimeField(models.DateTimeField):
     """DateTimeField that always uses Django's timezone.now() instead of database time"""
 
     def __init__(self, *args, **kwargs):
-        # Force db_default to None so Django uses Python defaults
-        kwargs["db_default"] = None
+        # Remove db_default if present (not supported in older Django versions)
+        kwargs.pop("db_default", None)
         super().__init__(*args, **kwargs)
 
     def pre_save(self, model_instance, add):
