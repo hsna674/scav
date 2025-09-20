@@ -227,22 +227,13 @@ def validate_flag(request):
         flag = request.POST.get("flag", "")
 
         # Check if challenge is released (for non-staff users)
-        if not request.user.is_staff:
-            from django.utils import timezone
-
-            now = timezone.now()
-            is_released = challenge.unblocked or (
-                challenge.timed_release
-                and challenge.release_time
-                and challenge.release_time <= now
+        if not request.user.is_staff and not challenge.is_released():
+            return JsonResponse(
+                {
+                    "result": "error",
+                    "message": "This challenge is not yet available.",
+                }
             )
-            if not is_released:
-                return JsonResponse(
-                    {
-                        "result": "error",
-                        "message": "This challenge is not yet available.",
-                    }
-                )
 
         # Compare flags case-insensitively and ignore surrounding whitespace
         is_correct = flag.strip().lower() == challenge.flag.strip().lower()

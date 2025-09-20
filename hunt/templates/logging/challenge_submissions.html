@@ -20,11 +20,50 @@
                 <div class="card-body">
                     <h5 class="card-title">Challenge Details</h5>
                     <ul class="list-unstyled">
-                        <li><strong>Points:</strong> {{ challenge.points }}</li>
+                        <li><strong>Points:</strong> 
+                            {{ challenge.points }}
+                            {% if challenge.is_decreasing %}
+                                (Current: {{ challenge.get_current_points }})
+                            {% endif %}
+                        </li>
                         <li><strong>Category:</strong> {{ challenge.category.name|default:"Uncategorized" }}</li>
-                        <li><strong>Exclusive:</strong> {% if challenge.exclusive %}Yes{% else %}No{% endif %}</li>
-                        <li><strong>Locked:</strong> {% if challenge.locked %}Yes{% else %}No{% endif %}</li>
-                        <li><strong>Released:</strong> {% if challenge.unblocked %}Yes{% else %}No{% endif %}</li>
+                        <li><strong>Type:</strong> 
+                            {{ challenge.get_challenge_type_display }}
+                            {% if challenge.is_decreasing %}
+                                ({{ challenge.decay_percentage }}% decay)
+                            {% elif challenge.is_unlocking and challenge.required_challenges.exists %}
+                                ({{ challenge.required_challenges.count }} prerequisites)
+                            {% endif %}
+                        </li>
+                        <li><strong>Locked:</strong> 
+                            {% if challenge.locked %}
+                                Yes (Exclusive challenge completed - no longer available)
+                            {% else %}
+                                No
+                            {% endif %}
+                        </li>
+                        <li><strong>Released:</strong> 
+                            {% if challenge.unblocked %}
+                                Yes (Manual)
+                            {% elif challenge.timed_release and challenge.release_time %}
+                                {% if challenge.is_released %}
+                                    Yes (Timed - Released {{ challenge.release_time|date:"M j, Y g:i A" }})
+                                {% else %}
+                                    No (Scheduled for {{ challenge.release_time|date:"M j, Y g:i A" }})
+                                {% endif %}
+                            {% else %}
+                                No
+                            {% endif %}
+                        </li>
+                        {% if challenge.is_unlocking and challenge.required_challenges.exists %}
+                        <li><strong>Prerequisites:</strong>
+                            <ul class="mt-1">
+                                {% for req_challenge in challenge.required_challenges.all %}
+                                <li class="small">{{ req_challenge.name }}</li>
+                                {% endfor %}
+                            </ul>
+                        </li>
+                        {% endif %}
                     </ul>
                 </div>
             </div>
