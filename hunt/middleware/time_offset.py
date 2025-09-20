@@ -29,6 +29,16 @@ class TimeOffsetMiddleware:
         # Initial sync
         self._sync_time_offset()
 
+        # Override timezone.now immediately, not on first request
+        if not hasattr(timezone, "_original_now"):
+            timezone._original_now = timezone.now
+
+            # Override timezone.now to add our dynamic offset
+            def corrected_now():
+                return timezone._original_now() + self.time_offset
+
+            timezone.now = corrected_now
+
     def _get_world_time(self):
         """Get current UTC time from world time API"""
         try:
@@ -136,16 +146,6 @@ class TimeOffsetMiddleware:
                     self._sync_time_offset()
 
             threading.Thread(target=background_sync, daemon=True).start()
-
-        # Store original timezone.now on first request
-        if not hasattr(timezone, "_original_now"):
-            timezone._original_now = timezone.now
-
-            # Override timezone.now to add our dynamic offset
-            def corrected_now():
-                return timezone._original_now() + self.time_offset
-
-            timezone.now = corrected_now
 
         response = self.get_response(request)
         return response
