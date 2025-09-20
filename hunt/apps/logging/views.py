@@ -204,11 +204,27 @@ def user_activity(request, user_id):
         .select_related("challenge")
         .order_by("-timestamp")
     )
+    # Get completions with their corresponding flag submissions for invalidation
+    completions_with_submissions = []
     completions = (
         ChallengeCompletion.objects.filter(user=user)
         .select_related("challenge")
         .order_by("-timestamp")
     )
+
+    for completion in completions:
+        # Find the corresponding flag submission
+        try:
+            flag_submission = FlagSubmission.objects.get(
+                user=user,
+                challenge=completion.challenge,
+                is_correct=True,
+                invalidated=False,
+            )
+            completion.flag_submission_id = flag_submission.id
+        except FlagSubmission.DoesNotExist:
+            completion.flag_submission_id = None
+        completions_with_submissions.append(completion)
 
     # Pagination for activities
     paginator = Paginator(activities, 50)
@@ -240,7 +256,7 @@ def user_activity(request, user_id):
         "profile_user": user,
         "page_obj": page_obj,
         "flag_submissions": flag_submissions[:20],  # Show recent 20
-        "completions": completions[:20],  # Show recent 20
+        "completions": completions_with_submissions[:20],  # Show recent 20
         "stats": stats,
         "dark_mode": request.user.dark_mode,
     }
@@ -436,75 +452,6 @@ def invalidate_submission(request, submission_id):
 
     except FlagSubmission.DoesNotExist:
         return JsonResponse({"error": "Submission not found"}, status=404)
-    except Exception as e:
-        return JsonResponse({"error": str(e)}, status=500)
-
-
-@staff_or_committee_required
-def invalidate_completion(request, completion_id):
-    """Invalidate a single challenge completion"""
-    if request.method != "POST":
-        return JsonResponse({"error": "POST required"}, status=405)
-
-    try:
-        completion = ChallengeCompletion.objects.get(id=completion_id)
-
-        # Remove from user's completed challenges
-        completion.user.challenges_done.remove(completion.challenge)
-
-        # Remove from class completed challenges if no other completions exist
-        class_obj = Class.objects.get(year=completion.class_year)
-        other_completions = (
-            ChallengeCompletion.objects.filter(
-                challenge=completion.challenge, class_year=completion.class_year
-            )
-            .exclude(id=completion.id)
-            .exists()
-        )
-        if not other_completions:
-            class_obj.challenges_completed.remove(completion.challenge)
-
-            # If this was an exclusive challenge, unlock it
-            if completion.challenge.is_exclusive:
-                completion.challenge.locked = False
-                completion.challenge.save()
-
-        # Zero out points on corresponding flag submission
-        FlagSubmission.objects.filter(
-            user=completion.user, challenge=completion.challenge, is_correct=True
-        ).update(points_awarded=0)
-
-        # Log the invalidation action
-        log_admin_action(
-            user=request.user,
-            action="invalidate_completion",
-            details={
-                "invalidated_user": completion.user.username,
-                "challenge_id": completion.challenge.id,
-                "challenge_name": completion.challenge.name,
-                "points_removed": completion.points_earned,
-                "completion_id": completion.id,
-                "class_year": completion.class_year,
-            },
-            request=request,
-        )
-
-        # Store info for response before deletion
-        challenge_name = completion.challenge.name
-        username = completion.user.username
-
-        # Delete the completion
-        completion.delete()
-
-        return JsonResponse(
-            {
-                "success": True,
-                "message": f"Completion for {challenge_name} by {username} has been invalidated",
-            }
-        )
-
-    except ChallengeCompletion.DoesNotExist:
-        return JsonResponse({"error": "Completion not found"}, status=404)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
 

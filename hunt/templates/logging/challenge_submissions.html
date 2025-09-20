@@ -187,7 +187,10 @@
                                     <td><small class="text-muted">{{ submission.ip_address }}</small></td>
                                     <td>
                                         {% if submission.invalidated %}
-                                        <small class="text-muted">Invalidated by {{ submission.invalidated_by.username }}</small>
+                                            <small class="text-muted">
+                                                Invalidated by {{ submission.invalidated_by.username }}<br>
+                                                <span class="text-muted">{{ submission.invalidated_at|date:"M j, Y g:i A" }}</span>
+                                            </small>
                                         {% elif submission.is_correct and submission.points_awarded > 0 %}
                                         <button class="btn btn-sm btn-danger" onclick="invalidateSubmission({{ submission.id }})">
                                             Invalidate
@@ -254,7 +257,7 @@ $(document).ready(function() {
 
 <script>
 function invalidateSubmission(submissionId) {
-    if (!confirm('Are you sure you want to completely remove this submission? This will permanently delete the submission and remove the completion and points from the user and class. This action cannot be undone.')) {
+    if (!confirm('Are you sure you want to invalidate this submission? This will mark the submission as invalid and remove the points, but will keep the submission record for audit purposes.')) {
         return;
     }
     
@@ -268,29 +271,30 @@ function invalidateSubmission(submissionId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // Completely remove the row from the table
+            // Update the row to show invalidation status instead of removing it
             const row = document.getElementById(`submission-${submissionId}`);
             if (row) {
-                // Add a fade-out animation
-                row.style.transition = 'opacity 0.3s ease-out';
-                row.style.opacity = '0';
+                // Update the Result column
+                const resultCell = row.children[5]; // Assuming Result is the 6th column (0-indexed)
+                if (resultCell) {
+                    resultCell.innerHTML = '<span class="badge badge-warning">⚠ Invalidated</span>';
+                }
                 
-                // Remove the row after animation
+                // Update the Actions column
+                const actionsCell = row.children[7]; // Assuming Actions is the 8th column (0-indexed)
+                if (actionsCell) {
+                    actionsCell.innerHTML = `<small class="text-muted">Invalidated by ${data.invalidated_by}<br><span class="text-muted">${data.invalidated_at}</span></small>`;
+                }
+                
+                // Add a brief highlight animation
+                row.style.transition = 'background-color 0.3s ease-out';
+                row.style.backgroundColor = '#fff3cd';
                 setTimeout(() => {
-                    row.remove();
-                    
-                    // Check if table is now empty
-                    const tbody = row.parentNode;
-                    if (tbody && tbody.children.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No submissions found</td></tr>';
-                    }
-                }, 300);
+                    row.style.backgroundColor = '';
+                }, 1000);
             }
             
             alert(data.message);
-            
-            // Optionally reload the page to refresh statistics
-            // location.reload();
         } else {
             alert('Error: ' + data.error);
         }

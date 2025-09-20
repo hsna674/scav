@@ -115,9 +115,13 @@
                         </div>
                         <div>
                             <span class="badge badge-primary">{{ completion.points_earned }} pts</span>
-                            <button class="btn btn-sm btn-danger ml-2" onclick="invalidateCompletion({{ completion.id }})">
+                            {% if completion.flag_submission_id %}
+                            <button class="btn btn-sm btn-danger ml-2" onclick="invalidateSubmission({{ completion.flag_submission_id }}, {{ completion.id }})">
                                 Invalidate
                             </button>
+                            {% else %}
+                            <small class="text-muted">No valid submission</small>
+                            {% endif %}
                         </div>
                     </div>
                     {% empty %}
@@ -226,12 +230,12 @@ $(document).ready(function() {
 
 
 <script>
-function invalidateCompletion(completionId) {
-    if (!confirm('Are you sure you want to invalidate this completion? This will remove the points from the user and class.')) {
+function invalidateSubmission(submissionId, completionId) {
+    if (!confirm('Are you sure you want to invalidate this completion? This will mark the flag submission as invalid and remove the points from the user and class. The submission record will be preserved for audit purposes.')) {
         return;
     }
     
-    fetch(`{% url 'logging:invalidate_completion' 0 %}`.replace('0', completionId), {
+    fetch(`{% url 'logging:invalidate_submission' 0 %}`.replace('0', submissionId), {
         method: 'POST',
         headers: {
             'X-CSRFToken': '{{ csrf_token }}',
@@ -241,21 +245,33 @@ function invalidateCompletion(completionId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // Remove the completion from the UI
+            // Remove the completion from the UI since completion records are deleted
             const completionDiv = document.getElementById(`completion-${completionId}`);
             if (completionDiv) {
-                completionDiv.style.opacity = '0.5';
-                completionDiv.innerHTML = '<div class="text-muted">Completion invalidated</div>';
+                // Add fade-out animation
+                completionDiv.style.transition = 'opacity 0.3s ease-out';
+                completionDiv.style.opacity = '0';
+                
+                // Remove after animation
+                setTimeout(() => {
+                    completionDiv.remove();
+                    
+                    // Check if completions section is now empty
+                    const completionsContainer = completionDiv.parentNode;
+                    if (completionsContainer && completionsContainer.children.length === 0) {
+                        completionsContainer.innerHTML = '<p class="text-muted">No completions yet</p>';
+                    }
+                }, 300);
             }
             
-            alert(data.message);
+            alert(data.message + ' The invalidated flag submission can still be seen in the Flag Submissions section below.');
         } else {
             alert('Error: ' + data.error);
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('An error occurred while invalidating the completion.');
+        alert('An error occurred while invalidating the submission.');
     });
 }
 

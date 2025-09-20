@@ -19,10 +19,5 @@ urlpatterns = [
         views.invalidate_submission,
         name="invalidate_submission",
     ),
-    path(
-        "invalidate-completion/<int:completion_id>/",
-        views.invalidate_completion,
-        name="invalidate_completion",
-    ),
     path("switch-class/", views.switch_user_class, name="switch_user_class"),
 ]
