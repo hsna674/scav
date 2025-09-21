@@ -308,11 +308,11 @@ def class_leaderboard(request):
 
     # Challenge difficulty analysis
     challenge_stats = Challenge.objects.annotate(
-        total_submissions=Count("submissions"),
+        total_submissions=Count("submissions", distinct=True),
         correct_submissions=Count(
-            "submissions", filter=Q(submissions__is_correct=True)
+            "submissions", filter=Q(submissions__is_correct=True), distinct=True
         ),
-        completion_count=Count("completions"),
+        completion_count=Count("completions", distinct=True),
     ).order_by("category", "order", "name")
 
     # Calculate success rate safely to avoid division by zero
