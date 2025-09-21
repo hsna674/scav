@@ -63,7 +63,11 @@ def log_flag_submission(
 def log_challenge_completion(
     user, challenge, points_earned, class_year, first_for_class=False, request=None
 ):
-    """Log when a user completes a challenge"""
+    """Log when a user completes a challenge.
+
+    first_for_class controls points & model field, but Discord "first blood" should
+    trigger only for the first overall completion of the challenge across ALL classes.
+    """
     try:
         ip_address = None
         if request:
@@ -98,9 +102,14 @@ def log_challenge_completion(
             },
         )
 
-        # Send Discord first blood notification asynchronously if this is the first solve for the class
-        if first_for_class:
-            try:
+        # Determine if this is the first overall completion (any class) and only then send Discord notification
+        try:
+            is_first_overall = (
+                not ChallengeCompletion.objects.filter(challenge=challenge)
+                .exclude(id=completion.id)
+                .exists()
+            )
+            if is_first_overall:
                 from threading import Thread
                 from ..main.discord_utils import send_first_blood_notification
 
@@ -111,9 +120,8 @@ def log_challenge_completion(
                     daemon=True,
                 )
                 discord_thread.start()
-            except Exception as e:
-                # Discord notifications should never break challenge solving
-                logger.error(f"Discord notification failed: {e}")
+        except Exception as e:
+            logger.error(f"Discord notification failed: {e}")
 
         return completion
 
