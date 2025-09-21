@@ -2,7 +2,6 @@ from django.db import models
 from django.apps import apps
 from django.db.models import Sum, Max
 from django.utils import timezone
-from hunt.apps.logging.fields import CorrectedDateTimeField
 
 
 class Category(models.Model):
@@ -76,7 +75,7 @@ class Challenge(models.Model):
         default=False,
         help_text="If enabled, this challenge will be automatically released at the specified date and time",
     )
-    release_time = CorrectedDateTimeField(
+    release_time = models.DateTimeField(
         null=True,
         blank=True,
         help_text="Date and time when this challenge should be automatically released (only used if timed release is enabled)",
@@ -224,7 +223,7 @@ class Class(models.Model):
         Challenge, related_name="classes_completed", blank=True
     )
 
-    last_updated = CorrectedDateTimeField(auto_now=True)
+    last_updated = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.year
@@ -287,7 +286,7 @@ class SiteConfig(models.Model):
     """
 
     site_enabled = models.BooleanField(default=True)
-    updated = CorrectedDateTimeField(auto_now=True)
+    updated = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name = "Site Configuration"
