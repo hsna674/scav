@@ -123,7 +123,10 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-AUTHENTICATION_BACKENDS = ("hunt.apps.auth.oauth.IonOauth2",)
+AUTHENTICATION_BACKENDS = (
+    "django.contrib.auth.backends.ModelBackend",  # Default Django authentication
+    "hunt.apps.auth.oauth.IonOauth2",  # OAuth authentication
+)
 
 SOCIAL_AUTH_USER_FIELDS = [
     "username",

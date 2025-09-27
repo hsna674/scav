@@ -19,7 +19,7 @@ class User(AbstractBaseUser):
 
     USERNAME_FIELD = "username"
     EMAIL_FIELD = "email"
-    REQUIRED_FIELDS = ["first_name", "last_name", "is_student", "graduation_year"]
+    REQUIRED_FIELDS = ["first_name", "last_name", "is_student"]
 
     id = models.AutoField(primary_key=True)
 
