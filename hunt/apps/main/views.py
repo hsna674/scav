@@ -407,11 +407,6 @@ def custom_404_view(request, exception):
     return render(request, "404.html", context, status=404)
 
 
-def challenge_163624_view(request):
-    """Challenge page that looks like 404 but has hidden riddle in console"""
-    return render(request, "challenge_163624.html", status=404)
-
-
 @require_POST
 @login_required
 def move_challenge_up(request):
